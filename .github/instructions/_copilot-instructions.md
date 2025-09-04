@@ -1,3 +1,7 @@
+---
+applyTo: "____NOTHING____"
+---
+
 # Summary
 
 The goal of this app is to use Plaid to aggregate financial transactions from the user's connected accounts, store them in a database, and provide a simple interface to view and export the transactions.
