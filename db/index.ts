@@ -4,7 +4,7 @@ import { drizzle as drizzlePg } from "drizzle-orm/node-postgres"
 import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless"
 import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless"
 import { getEnvVar } from "@/lib/utils"
-import * as schema from "./schema"
+import * as schema from "@/db/schema"
 
 import type { NodePgDatabase } from "drizzle-orm/node-postgres"
 import type { NeonDatabase } from "drizzle-orm/neon-serverless"
@@ -98,13 +98,14 @@ function createDevOrTestPool(): PgPool {
 }
 
 function createDbAndPool(): { db: AnyDb; pool: AnyPool } {
+  const casing = "snake_case"
   if (isProd) {
     const pool = createProdPool()
-    const db = drizzleNeon(pool, { schema })
+    const db = drizzleNeon(pool, { schema, casing })
     return { db, pool }
   } else {
     const pool = createDevOrTestPool()
-    const db = drizzlePg(pool, { schema })
+    const db = drizzlePg(pool, { schema, casing })
     return { db, pool }
   }
 }
