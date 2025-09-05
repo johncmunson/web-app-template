@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { auth } from "@/auth/auth"
+import { auth } from "@/lib/auth"
+import { createRouteMatcher } from "@/lib/route-matcher"
 
 /**
  * ============================
@@ -8,34 +9,39 @@ import { auth } from "@/auth/auth"
  */
 
 /**
- * Public UI routes that should NOT be protected.
- * - Add/remove paths as needed (e.g., /reset-password, /verify-email, etc.)
- * - Use prefixes for groups of routes (e.g., "/public" would skip "/public/...").
- */
-const PUBLIC_ROUTES: readonly string[] = [
-  "/sign-in",
-  "/sign-up",
-  "/forgot-password",
-  "/verify-email",
-] as const
-
-/**
  * Base path where Better Auth mounts its routes.
  * Keep this in sync with your better-auth configuration (defaults to "/api/auth").
- * We still exclude it in the matcher, but keeping it here makes the intent clear and
- * enables short-circuiting in case the matcher changes.
+ * We still exclude all /api routes in the matcher, but keeping it here makes the
+ * intent clear and enables short-circuiting in case the matcher changes.
  */
-const AUTH_BASE_PATH = process.env.BETTER_AUTH_BASE_PATH ?? "/api/auth"
+const AUTH_BASE_PATH = "/api/auth"
+
+/**
+ * Helper: Redirect to /sign-in with a callback back to the original URL
+ */
+function redirectToSignIn(req: NextRequest): NextResponse {
+  const original = req.nextUrl.pathname + req.nextUrl.search
+  const url = new URL("/sign-in", req.url)
+  url.searchParams.set("callbackURL", original)
+  return NextResponse.redirect(url)
+}
+
+/**
+ * Represents a middleware guard function that can process a Next.js request.
+ *
+ * @param req - The incoming Next.js request object.
+ * @returns A `NextResponse` to short-circuit the middleware chain, or `void` to continue processing.
+ *          The return value can be synchronous or a Promise.
+ */
+type Guard = (
+  req: NextRequest,
+) => Promise<NextResponse | void> | NextResponse | void
 
 /**
  * If you anticipate adding more guards later (roles, AB tests, etc.),
  * this utility makes it trivial to add them to the pipeline without
  * rewriting the middleware structure.
  */
-type Guard = (
-  req: NextRequest,
-) => Promise<NextResponse | void> | NextResponse | void
-
 async function runGuards(
   req: NextRequest,
   guards: Guard[],
@@ -52,51 +58,33 @@ async function runGuards(
 }
 
 /**
- * Helper: Is this a public route? (prefix match)
+ * ============================
+ * Route Matchers
+ * ============================
  */
-function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTES.some(
-    (pub) => pathname === pub || pathname.startsWith(`${pub}/`),
-  )
-}
 
 /**
- * Helper: Is this a Better Auth server route? (prefix match)
- * Note: We exclude it via matcher, but keeping this check makes the guard intent explicit.
+ * Is this a public route? (prefix match)
  */
-function isAuthServerRoute(pathname: string): boolean {
-  return (
-    pathname === AUTH_BASE_PATH || pathname.startsWith(`${AUTH_BASE_PATH}/`)
-  )
-}
+const isPublicRoute = createRouteMatcher([
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/forgot-password(.*)",
+  "/verify-email(.*)",
+])
 
 /**
- * Helper: Is this request a client prefetch? (avoid doing heavy work)
+ * Is this a Better Auth server route? (prefix match)
+ */
+const isAuthServerRoute = createRouteMatcher([`${AUTH_BASE_PATH}(.*)`])
+
+/**
+ * Is this request a client prefetch? (avoid doing heavy work)
  */
 function isPrefetch(req: NextRequest): boolean {
   const prefetch1 = req.headers.get("next-router-prefetch")
   const prefetch2 = req.headers.get("purpose")
   return prefetch1 !== null || prefetch2 === "prefetch"
-}
-
-/**
- * Helper: Redirect to /sign-in with a callback back to the original URL
- * For HTML navigations we redirect; for non-HTML (APIs, fetch) we return 401 JSON.
- */
-function redirectToSignIn(req: NextRequest): NextResponse {
-  const wantsHTML = req.headers.get("accept")?.includes("text/html")
-  const original = req.nextUrl.pathname + req.nextUrl.search
-
-  if (!wantsHTML) {
-    return NextResponse.json(
-      { error: "UNAUTHORIZED", message: "Authentication required" },
-      { status: 401 },
-    )
-  }
-
-  const url = new URL("/sign-in", req.url)
-  url.searchParams.set("callbackURL", original)
-  return NextResponse.redirect(url)
 }
 
 /**
@@ -110,36 +98,27 @@ function redirectToSignIn(req: NextRequest): NextResponse {
  * Keep this guard first so we don’t do unnecessary work.
  */
 const publicAndSystemGuard: Guard = (req) => {
-  const { pathname } = req.nextUrl
-
-  // Skip work for client prefetches
   if (isPrefetch(req)) return NextResponse.next()
-
-  // Skip Better Auth server routes (e.g. /api/auth/*)
-  if (isAuthServerRoute(pathname)) return NextResponse.next()
-
-  // Skip public UI routes (e.g. /sign-in, /sign-up)
-  if (isPublicRoute(pathname)) return NextResponse.next()
+  if (isAuthServerRoute(req)) return NextResponse.next()
+  if (isPublicRoute(req)) return NextResponse.next()
+  // Fall-through = protected
 }
 
 /**
  * Guard 2: Authentication guard (Better Auth).
  * Validates the session cookie via Better Auth.
  * If authenticated, do nothing (allow request through).
- * If not, redirect to /sign-in (or return 401 for non-HTML).
+ * If not, redirect to /sign-in.
  */
 const authGuard: Guard = async (req) => {
   // In middleware we already have the headers from the request.
   // We can pass them directly to better-auth to validate the session cookie.
   const session = await auth.api.getSession({ headers: req.headers })
 
-  if (!session) {
-    return redirectToSignIn(req)
-  }
+  if (!session) return redirectToSignIn(req)
 
   // Authenticated — allow request through
   // If you want to add headers based on the session, do it here.
-  return
 }
 
 /**
@@ -180,8 +159,18 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
  * - static assets (common extensions)
  * - metadata files (favicon, sitemap, robots, manifest)
  *
- * We do not exclude /sign-in or /sign-up here intentionally so this file can be
- * reused in projects that might protect / (home) and then short-circuit in the guard.
+ * By excluding /api routes, we are making the conscious decision to keep this
+ * middleware focused on protecting UI routes only, while deferring API route
+ * protection to other means, since API routes often have different needs such
+ * as returning JSON 401 responses instead of redirects, rate limiting, etc.
+ *
+ * We do not exclude UI routes that need to remain public, such as auth routes
+ * like /sign-in or /sign-up, so that we don't create confusion between when the
+ * matcher is responsible for and what the guards are responsible for. To keep
+ * the mental model simple, we are using the matcher to exclude big buckets of
+ * traffic that definitely do not need the middleware, and leaving all fine-
+ * grained logic to the guards above.
+ *
  * If you prefer not to run the middleware at all for those routes, add them to the
  * negative lookahead below.
  */
