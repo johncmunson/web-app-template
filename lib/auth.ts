@@ -4,6 +4,10 @@ import { db } from "@/db"
 import { betterAuth } from "better-auth"
 import { nextCookies } from "better-auth/next-js"
 import { getEnvVar } from "@/lib/utils"
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "@/lib/email-services"
 
 const nodeEnv = getEnvVar("NODE_ENV")
 const isProd = nodeEnv === "production"
@@ -43,13 +47,26 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
-    // Allow the user to login an use the app without verifying their email.
+    // Allow the user to login and use the app without verifying their email.
     // We will require email verification for anything requiring payment or subscription.
     requireEmailVerification: false,
     // Automatically sign in the user after sign up
     autoSignIn: true,
     sendResetPassword: async (data, request) => {
       // Send an email to the user with a link to reset their password
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || getEnvVar("BETTER_AUTH_URL")
+      const resetUrl = `${baseUrl}/reset-password?token=${data.token}`
+
+      const result = await sendPasswordResetEmail(
+        { email: data.user.email, name: data.user.name },
+        resetUrl,
+      )
+
+      if (!result.success) {
+        console.error("Failed to send password reset email:", result.error)
+        throw new Error("Failed to send password reset email")
+      }
     },
   },
   emailVerification: {
@@ -57,6 +74,15 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
       // Send an email to the user with the verification link
+      const result = await sendVerificationEmail(
+        { email: user.email, name: user.name },
+        url,
+      )
+
+      if (!result.success) {
+        console.error("Failed to send verification email:", result.error)
+        throw new Error("Failed to send verification email")
+      }
     },
   },
   // socialProviders: {
