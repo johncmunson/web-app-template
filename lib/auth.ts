@@ -8,12 +8,12 @@ import { getEnvVar } from "@/lib/utils"
 const nodeEnv = getEnvVar("NODE_ENV")
 const isProd = nodeEnv === "production"
 
-const githubClientId = getEnvVar("GITHUB_CLIENT_ID")
-const githubClientSecret = getEnvVar("GITHUB_CLIENT_SECRET")
-const microsoftClientId = getEnvVar("MICROSOFT_CLIENT_ID")
-const microsoftClientSecret = getEnvVar("MICROSOFT_CLIENT_SECRET")
-const googleClientId = getEnvVar("GOOGLE_CLIENT_ID")
-const googleClientSecret = getEnvVar("GOOGLE_CLIENT_SECRET")
+// const githubClientId = getEnvVar("GITHUB_CLIENT_ID")
+// const githubClientSecret = getEnvVar("GITHUB_CLIENT_SECRET")
+// const microsoftClientId = getEnvVar("MICROSOFT_CLIENT_ID")
+// const microsoftClientSecret = getEnvVar("MICROSOFT_CLIENT_SECRET")
+// const googleClientId = getEnvVar("GOOGLE_CLIENT_ID")
+// const googleClientSecret = getEnvVar("GOOGLE_CLIENT_SECRET")
 
 export const auth = betterAuth({
   appName: "Web App Template",
@@ -28,10 +28,35 @@ export const auth = betterAuth({
       useNumberId: true,
     },
   },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
+    },
+  },
+  account: {
+    updateAccountOnSignIn: true,
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["email-password", "google", "github", "microsoft"],
+    },
+  },
   emailAndPassword: {
     enabled: true,
-    async sendResetPassword(data, request) {
+    // Allow the user to login an use the app without verifying their email.
+    // We will require email verification for anything requiring payment or subscription.
+    requireEmailVerification: false,
+    // Automatically sign in the user after sign up
+    autoSignIn: true,
+    sendResetPassword: async (data, request) => {
       // Send an email to the user with a link to reset their password
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      // Send an email to the user with the verification link
     },
   },
   // socialProviders: {
