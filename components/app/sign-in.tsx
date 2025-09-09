@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,12 +17,15 @@ import { Loader2, Key } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  const router = useRouter()
 
   return (
     <Card className="max-w-md">
@@ -80,6 +84,11 @@ export default function SignIn() {
             className="w-full"
             disabled={loading}
             onClick={async () => {
+              if (!email || !password) {
+                toast.error("Please fill in all fields")
+                return
+              }
+
               await authClient.signIn.email(
                 {
                   email,
@@ -91,6 +100,13 @@ export default function SignIn() {
                   },
                   onResponse: (ctx) => {
                     setLoading(false)
+                  },
+                  onError: (ctx) => {
+                    toast.error(ctx.error.message)
+                  },
+                  onSuccess: () => {
+                    toast.success("Signed in successfully!")
+                    router.push("/")
                   },
                 },
               )
@@ -117,7 +133,7 @@ export default function SignIn() {
                 await authClient.signIn.social(
                   {
                     provider: "google",
-                    callbackURL: "/dashboard",
+                    callbackURL: "/",
                   },
                   {
                     onRequest: (ctx) => {
@@ -163,7 +179,7 @@ export default function SignIn() {
                 await authClient.signIn.social(
                   {
                     provider: "github",
-                    callbackURL: "/dashboard",
+                    callbackURL: "/",
                   },
                   {
                     onRequest: (ctx) => {
@@ -197,7 +213,7 @@ export default function SignIn() {
                 await authClient.signIn.social(
                   {
                     provider: "microsoft",
-                    callbackURL: "/dashboard",
+                    callbackURL: "/",
                   },
                   {
                     onRequest: (ctx) => {
@@ -226,6 +242,16 @@ export default function SignIn() {
           </div>
         </div>
       </CardContent>
+      <CardFooter>
+        <div className="w-full">
+          <div className="text-center text-sm">
+            Don&apos;t have an account?{" "}
+            <Link href="/sign-up" className="underline">
+              Sign up
+            </Link>
+          </div>
+        </div>
+      </CardFooter>
     </Card>
   )
 }
