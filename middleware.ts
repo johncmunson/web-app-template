@@ -9,14 +9,6 @@ import { createRouteMatcher } from "@/lib/route-matcher"
  */
 
 /**
- * Base path where Better Auth mounts its routes.
- * Keep this in sync with your better-auth configuration (defaults to "/api/auth").
- * We still exclude all /api routes in the matcher, but keeping it here makes the
- * intent clear and enables short-circuiting in case the matcher changes.
- */
-const AUTH_BASE_PATH = "/api/auth"
-
-/**
  * Helper: Redirect to /sign-in with a callback back to the original URL
  */
 function redirectToSignIn(req: NextRequest): NextResponse {
@@ -64,21 +56,6 @@ async function runGuards(
  */
 
 /**
- * Is this a public route? (prefix match)
- */
-const isPublicRoute = createRouteMatcher([
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/forgot-password(.*)",
-  "/verify-email(.*)",
-])
-
-/**
- * Is this a Better Auth server route? (prefix match)
- */
-const isAuthServerRoute = createRouteMatcher([`${AUTH_BASE_PATH}(.*)`])
-
-/**
  * Is this request a client prefetch? (avoid doing heavy work)
  */
 function isPrefetch(req: NextRequest): boolean {
@@ -88,19 +65,56 @@ function isPrefetch(req: NextRequest): boolean {
 }
 
 /**
+ * Is this a public route? (prefix match)
+ */
+const isPublicAuthRoute = createRouteMatcher([
+  /^\/sign-in($|\/.*)/,
+  /^\/sign-up($|\/.*)/,
+  /^\/forgot-password($|\/.*)/,
+  /^\/verify-email($|\/.*)/,
+])
+
+/**
+ * Is this a Next.js system route?
+ */
+const isSystemRoute = createRouteMatcher([/^\/_next\//])
+
+/**
+ * Is this a static asset route?
+ */
+const isStaticAsset = createRouteMatcher([
+  /\.(svg|png|jpg|jpeg|gif|webp|avif|ico|bmp|tiff|tif|js|css|json|xml|txt)$/i,
+])
+
+/**
+ * Is this an API route?
+ * By excluding /api routes, we are making the conscious decision to keep this
+ * middleware focused on protecting UI routes only, while deferring API route
+ * protection to other means, since API routes often have different needs such
+ * as returning JSON 401 responses instead of redirects, rate limiting, etc.
+ */
+const isApiRoute = createRouteMatcher([/^\/api\//])
+
+/**
  * ============================
  * Guards (extensible)
  * ============================
  */
 
 /**
- * Guard 1: Short-circuit for public routes, better-auth routes, and prefetch requests.
+ * Guard 1: Short-circuit for public routes, better-auth routes, prefetch requests, etc.
  * Keep this guard first so we don’t do unnecessary work.
  */
-const publicAndSystemGuard: Guard = (req) => {
-  if (isPrefetch(req)) return NextResponse.next()
-  if (isAuthServerRoute(req)) return NextResponse.next()
-  if (isPublicRoute(req)) return NextResponse.next()
+const shortCircuitGuard: Guard = (req) => {
+  if (
+    isPrefetch(req) ||
+    isPublicAuthRoute(req) ||
+    isSystemRoute(req) ||
+    isApiRoute(req) ||
+    isStaticAsset(req)
+  ) {
+    return NextResponse.next()
+  }
   // Fall-through = protected
 }
 
@@ -144,41 +158,22 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   // 1) Cheap fast-path exclusions (public/system/prefetch)
   // 2) Auth
   // 3) (Optional) Role/feature guards, etc.
-  return runGuards(req, [publicAndSystemGuard, authGuard])
+  return runGuards(req, [shortCircuitGuard, authGuard])
 }
 
 /**
  * ============================
  * Matcher Configuration
  * ============================
- *
- * We target all paths EXCEPT:
- * - /api           (API routes)
- * - /_next/static  (Next.js static files)
- * - /_next/image   (Next.js image optimizer)
- * - static assets (common extensions)
- * - metadata files (favicon, sitemap, robots, manifest)
- *
- * By excluding /api routes, we are making the conscious decision to keep this
- * middleware focused on protecting UI routes only, while deferring API route
- * protection to other means, since API routes often have different needs such
- * as returning JSON 401 responses instead of redirects, rate limiting, etc.
- *
- * We do not exclude UI routes that need to remain public, such as auth routes
- * like /sign-in or /sign-up, so that we don't create confusion between when the
- * matcher is responsible for and what the guards are responsible for. To keep
- * the mental model simple, we are using the matcher to exclude big buckets of
- * traffic that definitely do not need the middleware, and leaving all fine-
- * grained logic to the guards above.
- *
- * If you prefer not to run the middleware at all for those routes, add them to the
- * negative lookahead below.
  */
+
 export const config = {
   runtime: "nodejs" as const, // Use Node runtime so we can safely call auth.api.* from middleware
   matcher: [
-    // Negative lookahead to exclude public/system paths & assets
-    // You can add more extensions as needed.
-    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|manifest.webmanifest|assets|fonts|.*\\.(?:css|js|mjs|map|png|jpg|jpeg|gif|svg|webp|avif|ico|bmp|tiff|woff|woff2|ttf|eot|otf|mp4|webm|mp3|wav)$).*)",
+    /*
+     * Match all paths - we'll handle exclusions in the middleware function itself
+     * This ensures we have full control over what gets processed
+     */
+    "/(.*)",
   ],
 }
