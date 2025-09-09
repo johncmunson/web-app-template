@@ -12,12 +12,12 @@ import {
 const nodeEnv = getEnvVar("NODE_ENV")
 const isProd = nodeEnv === "production"
 
-// const githubClientId = getEnvVar("GITHUB_CLIENT_ID")
-// const githubClientSecret = getEnvVar("GITHUB_CLIENT_SECRET")
-// const microsoftClientId = getEnvVar("MICROSOFT_CLIENT_ID")
-// const microsoftClientSecret = getEnvVar("MICROSOFT_CLIENT_SECRET")
-// const googleClientId = getEnvVar("GOOGLE_CLIENT_ID")
-// const googleClientSecret = getEnvVar("GOOGLE_CLIENT_SECRET")
+const githubClientId = getEnvVar("GITHUB_CLIENT_ID")
+const githubClientSecret = getEnvVar("GITHUB_CLIENT_SECRET")
+const microsoftClientId = getEnvVar("MICROSOFT_CLIENT_ID")
+const microsoftClientSecret = getEnvVar("MICROSOFT_CLIENT_SECRET")
+const googleClientId = getEnvVar("GOOGLE_CLIENT_ID")
+const googleClientSecret = getEnvVar("GOOGLE_CLIENT_SECRET")
 
 export const auth = betterAuth({
   appName: "Web App Template",
@@ -85,20 +85,20 @@ export const auth = betterAuth({
       }
     },
   },
-  // socialProviders: {
-  //   google: {
-  //     clientId: googleClientId,
-  //     clientSecret: googleClientSecret,
-  //   },
-  //   github: {
-  //     clientId: githubClientId,
-  //     clientSecret: githubClientSecret,
-  //   },
-  //   microsoft: {
-  //     clientId: microsoftClientId,
-  //     clientSecret: microsoftClientSecret,
-  //   },
-  // },
+  socialProviders: {
+    google: {
+      clientId: googleClientId,
+      clientSecret: googleClientSecret,
+    },
+    github: {
+      clientId: githubClientId,
+      clientSecret: githubClientSecret,
+    },
+    microsoft: {
+      clientId: microsoftClientId,
+      clientSecret: microsoftClientSecret,
+    },
+  },
   // make sure that nextCookies() comes last in the array
   plugins: [nextCookies()],
 })
