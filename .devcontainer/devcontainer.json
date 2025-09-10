@@ -14,7 +14,8 @@
         "esbenp.prettier-vscode",
         "dbaeumer.vscode-eslint",
         "bradlc.vscode-tailwindcss",
-        "yoavbls.pretty-ts-errors"
+        "yoavbls.pretty-ts-errors",
+        "ms-ossdata.vscode-pgsql" // PostgreSQL extension
       ],
       "settings": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
