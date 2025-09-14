@@ -1,4 +1,4 @@
-import { authClient } from "@/lib/auth-client"
+import { SignOutButton } from "@/components/app/sign-out-button"
 
 export default function Home() {
   return (
@@ -13,12 +13,7 @@ export default function Home() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Hello!</h2>
           <p className="text-gray-600 mb-4">You are signed in.</p>
-          <button
-            onClick={() => authClient.signOut()}
-            className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
-          >
-            Sign Out
-          </button>
+          <SignOutButton />
         </div>
       </div>
     </div>
