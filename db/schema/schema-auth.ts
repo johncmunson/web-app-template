@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core"
+import { pgTable, text, integer, timestamp, boolean } from "drizzle-orm/pg-core"
 import { reusableColumns } from "./helpers"
 
 export const users = pgTable("users", {
@@ -15,7 +15,7 @@ export const sessions = pgTable("sessions", {
   token: text().notNull().unique(),
   ipAddress: text(),
   userAgent: text(),
-  userId: text()
+  userId: integer()
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
 })
@@ -24,7 +24,7 @@ export const accounts = pgTable("accounts", {
   ...reusableColumns,
   accountId: text().notNull(),
   providerId: text().notNull(),
-  userId: text()
+  userId: integer()
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   accessToken: text(),
