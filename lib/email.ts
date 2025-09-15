@@ -94,12 +94,12 @@ export async function sendEmail({
       return { success: false, error }
     }
 
-    console.log("Email sent successfully:", {
-      id: data?.id,
-      to: testRecipients,
-      subject: emailData.subject,
-      isProd,
-    })
+    // console.log("Email sent successfully:", {
+    //   id: data?.id,
+    //   to: testRecipients,
+    //   subject: emailData.subject,
+    //   isProd,
+    // })
 
     return { success: true, data }
   } catch (error) {
