@@ -8,6 +8,12 @@ import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { useRouter, useSearchParams } from "next/navigation"
 import { AuthCard } from "./auth-card"
+import {
+  ErrorContext,
+  RequestContext,
+  ResponseContext,
+  SuccessContext,
+} from "better-auth/react"
 // import Image from "next/image"
 
 // async function convertImageToBase64(file: File): Promise<string> {
@@ -25,11 +31,21 @@ export default function SignUp() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [passwordConfirmation, setPasswordConfirmation] = useState("")
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
   const searchParams = useSearchParams()
 
   const callbackURL = searchParams.get("callbackURL")
+
+  const partialSignInParams = { callbackURL: callbackURL || "/" }
+  const signInHooks = {
+    onRequest: (ctx: RequestContext) => setLoading(true),
+    onResponse: (ctx: ResponseContext) => setLoading(false),
+    onError: (ctx: ErrorContext) => {
+      toast.error(ctx.error.message)
+    },
+    // onSuccess: (ctx: SuccessContext) => {},
+  }
 
   // const [image, setImage] = useState<File | null>(null)
   // const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -73,28 +89,26 @@ export default function SignUp() {
             return
           }
 
-          await authClient.signUp.email({
-            email,
-            password,
-            name: `${firstName} ${lastName}`,
-            image: "", // image ? await convertImageToBase64(image) : "",
-            callbackURL: callbackURL || "/",
-            fetchOptions: {
-              onResponse: () => {
-                setLoading(false)
-              },
-              onRequest: () => {
-                setLoading(true)
-              },
-              onError: (ctx) => {
-                toast.error(ctx.error.message)
-              },
-              onSuccess: async () => {
-                toast.success("Account created successfully!")
-                router.push("/")
+          await authClient.signUp.email(
+            {
+              email,
+              password,
+              name: `${firstName} ${lastName}`,
+              image: "", // image ? await convertImageToBase64(image) : "",
+              ...partialSignInParams,
+            },
+            {
+              ...signInHooks,
+              // NOTE: As opposed to signIn.email or signIn.social, where callbackURL is for where to redirect the
+              // user immediately after sign up/sign in, in signUp.email the callbackURL is for where to redirect
+              // the user after they verify their email (if email verification is enabled). So, for signUp.email,
+              // we utilize both the callbackURL _and_ the onSuccess hook. signUp.social does not behave this way
+              // because the email is assumed to be verified by the social provider.
+              onSuccess: (ctx: SuccessContext) => {
+                router.push(callbackURL || "/")
               },
             },
-          })
+          )
         }}
       >
         <div className="grid grid-cols-2 gap-4">
@@ -220,16 +234,9 @@ export default function SignUp() {
               await authClient.signIn.social(
                 {
                   provider: "google",
-                  callbackURL: callbackURL || "/",
+                  ...partialSignInParams,
                 },
-                {
-                  onRequest: (ctx) => {
-                    setLoading(true)
-                  },
-                  onResponse: (ctx) => {
-                    setLoading(false)
-                  },
-                },
+                signInHooks,
               )
             }}
           >
@@ -268,16 +275,9 @@ export default function SignUp() {
               await authClient.signIn.social(
                 {
                   provider: "github",
-                  callbackURL: callbackURL || "/",
+                  ...partialSignInParams,
                 },
-                {
-                  onRequest: (ctx) => {
-                    setLoading(true)
-                  },
-                  onResponse: (ctx) => {
-                    setLoading(false)
-                  },
-                },
+                signInHooks,
               )
             }}
           >
@@ -304,16 +304,9 @@ export default function SignUp() {
               await authClient.signIn.social(
                 {
                   provider: "microsoft",
-                  callbackURL: callbackURL || "/",
+                  ...partialSignInParams,
                 },
-                {
-                  onRequest: (ctx) => {
-                    setLoading(true)
-                  },
-                  onResponse: (ctx) => {
-                    setLoading(false)
-                  },
-                },
+                signInHooks,
               )
             }}
           >

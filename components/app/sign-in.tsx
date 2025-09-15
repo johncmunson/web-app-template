@@ -9,18 +9,33 @@ import { authClient } from "@/lib/auth-client"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { AuthCard } from "./auth-card"
+import {
+  ErrorContext,
+  RequestContext,
+  ResponseContext,
+  SuccessContext,
+} from "better-auth/react"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   const callbackURL = searchParams.get("callbackURL")
+
+  const partialSignInParams = { callbackURL: callbackURL || "/" }
+  const signInHooks = {
+    onRequest: (ctx: RequestContext) => setLoading(true),
+    onResponse: (ctx: ResponseContext) => setLoading(false),
+    onError: (ctx: ErrorContext) => {
+      toast.error(ctx.error.message)
+    },
+    onSuccess: (ctx: SuccessContext) => {},
+  }
 
   return (
     <AuthCard
@@ -45,18 +60,8 @@ export default function SignIn() {
           }
 
           await authClient.signIn.email(
-            { email, password },
-            {
-              onRequest: () => setLoading(true),
-              onResponse: () => setLoading(false),
-              onError: (ctx) => {
-                toast.error(ctx.error.message)
-              },
-              onSuccess: () => {
-                toast.success("Signed in successfully!")
-                router.push("/")
-              },
-            },
+            { email, password, rememberMe, ...partialSignInParams },
+            signInHooks,
           )
         }}
       >
@@ -132,16 +137,9 @@ export default function SignIn() {
               await authClient.signIn.social(
                 {
                   provider: "google",
-                  callbackURL: callbackURL || "/",
+                  ...partialSignInParams,
                 },
-                {
-                  onRequest: (ctx) => {
-                    setLoading(true)
-                  },
-                  onResponse: (ctx) => {
-                    setLoading(false)
-                  },
-                },
+                signInHooks,
               )
             }}
           >
@@ -180,16 +178,9 @@ export default function SignIn() {
               await authClient.signIn.social(
                 {
                   provider: "github",
-                  callbackURL: callbackURL || "/",
+                  ...partialSignInParams,
                 },
-                {
-                  onRequest: (ctx) => {
-                    setLoading(true)
-                  },
-                  onResponse: (ctx) => {
-                    setLoading(false)
-                  },
-                },
+                signInHooks,
               )
             }}
           >
@@ -216,16 +207,9 @@ export default function SignIn() {
               await authClient.signIn.social(
                 {
                   provider: "microsoft",
-                  callbackURL: callbackURL || "/",
+                  ...partialSignInParams,
                 },
-                {
-                  onRequest: (ctx) => {
-                    setLoading(true)
-                  },
-                  onResponse: (ctx) => {
-                    setLoading(false)
-                  },
-                },
+                signInHooks,
               )
             }}
           >
