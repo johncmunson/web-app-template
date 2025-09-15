@@ -10,7 +10,16 @@ import {
 import { authClient } from "@/lib/auth-client"
 import { useRouter, useSearchParams } from "next/navigation"
 
-export function useAuthAction() {
+// async function convertImageToBase64(file: File): Promise<string> {
+//   return new Promise((resolve, reject) => {
+//     const reader = new FileReader()
+//     reader.onloadend = () => resolve(reader.result as string)
+//     reader.onerror = reject
+//     reader.readAsDataURL(file)
+//   })
+// }
+
+export function useAuthHelpers() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackURL = searchParams.get("callbackURL") || "/"
@@ -37,6 +46,12 @@ export function useAuthAction() {
     email: "",
     password: "",
     passwordConfirmation: "",
+    // TODO: This field is not currently being used. However, there is commented out boilerplate
+    // code in this file and in sign-up.tsx for allowing the user to set a profile image on sign
+    // up with email/password. Please note that the Base64 strategy used in the commented out code
+    // is likely not compatible with the better-auth session/cookie cache that we are using b/c the
+    // encoded image string is too large to fit in the cookie. A different approach would be needed.
+    // For social sign in, the profile image URL is saved on the account automatically by better-auth.
     image: "", // image ? await convertImageToBase64(image) : "",
     callbackURL,
   })
@@ -110,10 +125,11 @@ export function useAuthAction() {
       {
         ...hooks,
         // NOTE: As opposed to signIn.email or signIn.social, where callbackURL is for where to redirect the
-        // user immediately after sign up/sign in, in signUp.email the callbackURL is for where to redirect
+        // user immediately after sign in/sign up, in signUp.email the callbackURL is for where to redirect
         // the user after they verify their email (if email verification is enabled). So, for signUp.email,
-        // we utilize both the callbackURL _and_ the onSuccess hook. signUp.social does not behave this way
-        // because the email is assumed to be verified by the social provider.
+        // we utilize both the callbackURL _and_ the onSuccess hook. When using signIn.social to sign up a
+        // user, it doesn't behave the same way because the email is assumed to already be verified by the
+        // social provider.
         onSuccess: (_ctx) => {
           router.push(callbackURL || "/")
         },
@@ -128,15 +144,12 @@ export function useAuthAction() {
 
   return {
     loading,
-    hooks,
     signInFields,
     signInStaticFields,
-    setSignInFields,
-    validateSignIn,
     signUpFields,
     signUpStaticFields,
+    setSignInFields,
     setSignUpFields,
-    validateSignUp,
     onSignInEmailSubmit,
     onSignUpEmailSubmit,
     onSignInSocialClick,

@@ -8,25 +8,35 @@ import {
 } from "@/components/ui/card"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
+import { FormEvent } from "react"
+import { SocialAuthButtons } from "@/components/app/social-auth-buttons"
 
 interface AuthCardProps {
+  children: React.ReactNode
+  mode: "sign-in" | "sign-up"
   title: string
   description: string
-  children: React.ReactNode
   footerText: string
   footerLinkText: string
   footerHref: string
-  loading?: boolean
+  loading: boolean
+  onSubmit: (e: FormEvent<HTMLFormElement>) => void
+  onSignInSocialClick: (
+    providerId: "google" | "github" | "microsoft",
+  ) => Promise<void>
 }
 
 export function AuthCard({
+  children,
+  mode,
   title,
   description,
-  children,
   footerText,
   footerLinkText,
   footerHref,
-  loading = false,
+  loading,
+  onSubmit,
+  onSignInSocialClick,
 }: AuthCardProps) {
   return (
     <Card className="max-w-md w-full">
@@ -45,7 +55,18 @@ export function AuthCard({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4">{children}</div>
+        <form
+          className="grid gap-4"
+          aria-disabled={loading}
+          onSubmit={onSubmit}
+        >
+          {children}
+          <SocialAuthButtons
+            loading={loading}
+            mode={mode}
+            onSignInSocialClick={onSignInSocialClick}
+          />
+        </form>
       </CardContent>
       <CardFooter>
         <div className="w-full text-center text-sm">

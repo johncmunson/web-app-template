@@ -88,7 +88,7 @@ export function SocialAuthButtons({
 
   return (
     <div className={cn("w-full", className)}>
-      <div className="relative mb-2 mt-2">
+      <div className="relative mb-5 mt-2">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
         </div>
