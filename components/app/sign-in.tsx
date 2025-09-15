@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useState } from "react"
-import { Loader2 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -33,8 +32,34 @@ export default function SignIn() {
       footerHref={
         callbackURL ? `/sign-up?callbackURL=${callbackURL}` : "/sign-up"
       }
+      loading={loading}
     >
-      <div className="grid gap-4">
+      <form
+        className="grid gap-4"
+        onSubmit={async (e) => {
+          e.preventDefault()
+          if (loading) return
+          if (!email || !password) {
+            toast.error("Please fill in all fields")
+            return
+          }
+
+          await authClient.signIn.email(
+            { email, password },
+            {
+              onRequest: () => setLoading(true),
+              onResponse: () => setLoading(false),
+              onError: (ctx) => {
+                toast.error(ctx.error.message)
+              },
+              onSuccess: () => {
+                toast.success("Signed in successfully!")
+                router.push("/")
+              },
+            },
+          )
+        }}
+      >
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -43,13 +68,22 @@ export default function SignIn() {
             onChange={(e) => setEmail(e.target.value)}
             value={email}
             autoComplete="username"
+            disabled={loading}
           />
         </div>
 
         <div className="grid gap-2">
           <div>
             <Label htmlFor="password">Password</Label>
-            <Link href="#" className="ml-auto inline-block text-xs underline">
+            <Link
+              href="#"
+              className={cn(
+                "ml-auto inline-block text-xs underline",
+                loading && "pointer-events-none opacity-50",
+              )}
+              aria-disabled={loading}
+              tabIndex={loading ? -1 : 0}
+            >
               Forgot your password?
             </Link>
           </div>
@@ -60,6 +94,7 @@ export default function SignIn() {
             onChange={(e) => setPassword(e.target.value)}
             value={password}
             autoComplete="current-password"
+            disabled={loading}
           />
         </div>
 
@@ -69,48 +104,17 @@ export default function SignIn() {
             onClick={() => {
               setRememberMe(!rememberMe)
             }}
+            disabled={loading}
           />
           <Label htmlFor="remember">Remember me</Label>
         </div>
 
         <Button
           type="submit"
-          className="w-full"
+          className="w-full cursor-pointer"
           disabled={loading}
-          onClick={async () => {
-            if (!email || !password) {
-              toast.error("Please fill in all fields")
-              return
-            }
-
-            await authClient.signIn.email(
-              {
-                email,
-                password,
-              },
-              {
-                onRequest: (ctx) => {
-                  setLoading(true)
-                },
-                onResponse: (ctx) => {
-                  setLoading(false)
-                },
-                onError: (ctx) => {
-                  toast.error(ctx.error.message)
-                },
-                onSuccess: () => {
-                  toast.success("Signed in successfully!")
-                  router.push("/")
-                },
-              },
-            )
-          }}
         >
-          {loading ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <p>Login</p>
-          )}
+          <p>Login</p>
         </Button>
 
         <div
@@ -121,9 +125,10 @@ export default function SignIn() {
         >
           <Button
             variant="outline"
-            className={cn("w-full gap-2")}
+            className={cn("w-full gap-2 cursor-pointer")}
             disabled={loading}
             onClick={async () => {
+              if (loading) return
               await authClient.signIn.social(
                 {
                   provider: "google",
@@ -165,11 +170,13 @@ export default function SignIn() {
             </svg>
             Sign in with Google
           </Button>
+
           <Button
             variant="outline"
-            className={cn("w-full gap-2")}
+            className={cn("w-full gap-2 cursor-pointer")}
             disabled={loading}
             onClick={async () => {
+              if (loading) return
               await authClient.signIn.social(
                 {
                   provider: "github",
@@ -199,11 +206,13 @@ export default function SignIn() {
             </svg>
             Sign in with Github
           </Button>
+
           <Button
             variant="outline"
-            className={cn("w-full gap-2")}
+            className={cn("w-full gap-2 cursor-pointer")}
             disabled={loading}
             onClick={async () => {
+              if (loading) return
               await authClient.signIn.social(
                 {
                   provider: "microsoft",
@@ -234,7 +243,7 @@ export default function SignIn() {
             Sign in with Microsoft
           </Button>
         </div>
-      </div>
+      </form>
     </AuthCard>
   )
 }

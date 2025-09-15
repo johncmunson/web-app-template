@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
-import { Loader2 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -56,8 +55,48 @@ export default function SignUp() {
       footerHref={
         callbackURL ? `/sign-in?callbackURL=${callbackURL}` : "/sign-in"
       }
+      loading={loading}
     >
-      <div className="grid gap-4">
+      <form
+        className="grid gap-4"
+        onSubmit={async (e) => {
+          e.preventDefault()
+          if (loading) return
+          // Basic validation
+          if (!email || !password || !firstName || !lastName) {
+            toast.error("Please fill in all required fields")
+            return
+          }
+
+          if (password !== passwordConfirmation) {
+            toast.error("Passwords do not match")
+            return
+          }
+
+          await authClient.signUp.email({
+            email,
+            password,
+            name: `${firstName} ${lastName}`,
+            image: "", // image ? await convertImageToBase64(image) : "",
+            callbackURL: callbackURL || "/",
+            fetchOptions: {
+              onResponse: () => {
+                setLoading(false)
+              },
+              onRequest: () => {
+                setLoading(true)
+              },
+              onError: (ctx) => {
+                toast.error(ctx.error.message)
+              },
+              onSuccess: async () => {
+                toast.success("Account created successfully!")
+                router.push("/")
+              },
+            },
+          })
+        }}
+      >
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
             <Label htmlFor="first-name">First name</Label>
@@ -68,6 +107,7 @@ export default function SignUp() {
               }}
               value={firstName}
               autoComplete="given-name"
+              disabled={loading}
             />
           </div>
           <div className="grid gap-2">
@@ -79,6 +119,7 @@ export default function SignUp() {
               }}
               value={lastName}
               autoComplete="family-name"
+              disabled={loading}
             />
           </div>
         </div>
@@ -92,6 +133,7 @@ export default function SignUp() {
             }}
             value={email}
             autoComplete="email"
+            disabled={loading}
           />
         </div>
         <div className="grid gap-2">
@@ -102,6 +144,7 @@ export default function SignUp() {
             onChange={(e) => setPassword(e.target.value)}
             value={password}
             autoComplete="new-password"
+            disabled={loading}
           />
         </div>
         <div className="grid gap-2">
@@ -112,6 +155,7 @@ export default function SignUp() {
             onChange={(e) => setPasswordConfirmation(e.target.value)}
             value={passwordConfirmation}
             autoComplete="new-password"
+            disabled={loading}
           />
         </div>
         {/* <div className="grid gap-2">
@@ -149,49 +193,10 @@ export default function SignUp() {
           </div> */}
         <Button
           type="submit"
-          className="w-full"
+          className="w-full cursor-pointer"
           disabled={loading}
-          onClick={async () => {
-            // Basic validation
-            if (!email || !password || !firstName || !lastName) {
-              toast.error("Please fill in all required fields")
-              return
-            }
-
-            if (password !== passwordConfirmation) {
-              toast.error("Passwords do not match")
-              return
-            }
-
-            await authClient.signUp.email({
-              email,
-              password,
-              name: `${firstName} ${lastName}`,
-              image: "", // image ? await convertImageToBase64(image) : "",
-              callbackURL: callbackURL || "/",
-              fetchOptions: {
-                onResponse: () => {
-                  setLoading(false)
-                },
-                onRequest: () => {
-                  setLoading(true)
-                },
-                onError: (ctx) => {
-                  toast.error(ctx.error.message)
-                },
-                onSuccess: async () => {
-                  toast.success("Account created successfully!")
-                  router.push("/")
-                },
-              },
-            })
-          }}
         >
-          {loading ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            "Create an account"
-          )}
+          Create an account
         </Button>
 
         <div className="relative">
@@ -208,9 +213,10 @@ export default function SignUp() {
         <div className="grid gap-2">
           <Button
             variant="outline"
-            className="w-full gap-2"
+            className="w-full gap-2 cursor-pointer"
             disabled={loading}
             onClick={async () => {
+              if (loading) return
               await authClient.signIn.social(
                 {
                   provider: "google",
@@ -255,9 +261,10 @@ export default function SignUp() {
 
           <Button
             variant="outline"
-            className="w-full gap-2"
+            className="w-full gap-2 cursor-pointer"
             disabled={loading}
             onClick={async () => {
+              if (loading) return
               await authClient.signIn.social(
                 {
                   provider: "github",
@@ -290,9 +297,10 @@ export default function SignUp() {
 
           <Button
             variant="outline"
-            className="w-full gap-2"
+            className="w-full gap-2 cursor-pointer"
             disabled={loading}
             onClick={async () => {
+              if (loading) return
               await authClient.signIn.social(
                 {
                   provider: "microsoft",
@@ -323,7 +331,7 @@ export default function SignUp() {
             Sign up with Microsoft
           </Button>
         </div>
-      </div>
+      </form>
     </AuthCard>
   )
 }
