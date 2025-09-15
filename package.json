@@ -6,7 +6,12 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:check": "drizzle-kit check",
+    "db:reset": "drizzle-kit push && ts-node src/db/seed.ts (not implemented yet)"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
@@ -46,5 +51,11 @@
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.8",
     "typescript": "^5"
+  },
+  "_comments": {
+    "migration_workflow": {
+      "rapid_development": "Use `npm run db:push` to quickly push schema changes during development. This command applies changes directly to the database without creating migration files.",
+      "stable_development": "Use `npm run db:generate` to create a new migration file based on schema changes. After generating, use `npm run db:migrate` to apply the migration to the database."
+    }
   }
 }
