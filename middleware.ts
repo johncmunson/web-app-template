@@ -116,17 +116,6 @@ const shortCircuitGuard: Guard = (req) => {
  * If not, redirect to /sign-in.
  */
 const authGuard: Guard = async (req) => {
-  // Require the real session token cookie to be present to prevent
-  // cache-only (session_data) re-auth after sign-out or browser-close
-  // when rememberMe=false. Keep in sync if cookie prefix changes.
-  const SESSION_COOKIE_NAME = "better-auth.session_token"
-  const hasSessionToken = req.cookies.get(SESSION_COOKIE_NAME)?.value
-  console.log({ hasSessionToken })
-
-  if (!hasSessionToken) {
-    return redirectToSignIn(req)
-  }
-
   // Validate the session via Better Auth using request headers
   const session = await auth.api.getSession({ headers: req.headers })
   if (!session) return redirectToSignIn(req)
