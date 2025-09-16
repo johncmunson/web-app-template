@@ -56,15 +56,6 @@ async function runGuards(
  */
 
 /**
- * Is this request a client prefetch? (avoid doing heavy work)
- */
-function isPrefetch(req: NextRequest): boolean {
-  const prefetch1 = req.headers.get("next-router-prefetch")
-  const prefetch2 = req.headers.get("purpose")
-  return prefetch1 !== null || prefetch2 === "prefetch"
-}
-
-/**
  * Is this a public route? (prefix match)
  */
 const isPublicAuthRoute = createRouteMatcher([
@@ -107,14 +98,14 @@ const isApiRoute = createRouteMatcher([/^\/api\//])
  */
 const shortCircuitGuard: Guard = (req) => {
   if (
-    isPrefetch(req) ||
-    isPublicAuthRoute(req) ||
     isSystemRoute(req) ||
     isApiRoute(req) ||
-    isStaticAsset(req)
+    isStaticAsset(req) ||
+    isPublicAuthRoute(req)
   ) {
     return NextResponse.next()
   }
+
   // Fall-through = protected
 }
 
@@ -125,10 +116,19 @@ const shortCircuitGuard: Guard = (req) => {
  * If not, redirect to /sign-in.
  */
 const authGuard: Guard = async (req) => {
-  // In middleware we already have the headers from the request.
-  // We can pass them directly to better-auth to validate the session cookie.
-  const session = await auth.api.getSession({ headers: req.headers })
+  // Require the real session token cookie to be present to prevent
+  // cache-only (session_data) re-auth after sign-out or browser-close
+  // when rememberMe=false. Keep in sync if cookie prefix changes.
+  const SESSION_COOKIE_NAME = "better-auth.session_token"
+  const hasSessionToken = req.cookies.get(SESSION_COOKIE_NAME)?.value
+  console.log({ hasSessionToken })
 
+  if (!hasSessionToken) {
+    return redirectToSignIn(req)
+  }
+
+  // Validate the session via Better Auth using request headers
+  const session = await auth.api.getSession({ headers: req.headers })
   if (!session) return redirectToSignIn(req)
 
   // Authenticated — allow request through
