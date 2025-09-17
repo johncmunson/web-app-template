@@ -27,7 +27,7 @@ export function useAuthHelpers() {
   const [signInFields, setSignInFields] = useState({
     email: "",
     password: "",
-    rememberMe: false,
+    rememberMe: false, // NOTE: See important comments at the bottom of this file about "Remember me" functionality
     callbackURL,
   })
   const signInStaticFields = {
@@ -155,3 +155,52 @@ export function useAuthHelpers() {
     onSignInSocialClick,
   }
 }
+
+/**
+ * REMEMBER ME FUNCTIONALITY - IMPORTANT NOTES FOR DEVELOPERS
+ *
+ * Better Auth's "Remember me" functionality controls session cookie persistence, but browser
+ * behavior may not always match user expectations. Here's what you need to know:
+ *
+ * EXPECTED BEHAVIOR:
+ * - rememberMe: true  → User stays logged in across browser restarts
+ * - rememberMe: false → User gets logged out when browser is closed
+ *
+ * ACTUAL BROWSER BEHAVIOR:
+ * When rememberMe=false, Better Auth sets session cookies (no Max-Age), which should expire
+ * when the browser closes. However, modern browsers often restore session cookies due to:
+ * - "Continue where you left off" settings
+ * - Browser crash recovery
+ * - Incomplete browser shutdowns (closing tabs vs. quitting the app)
+ * - Mobile browser suspension rather than termination
+ * - Being logged in to a browser profile and having sync features enabled
+ *
+ * This means users who uncheck "Remember me" might still appear logged in after returning,
+ * which can be confusing and may not meet security expectations.
+ *
+ * POTENTIAL SOLUTION:
+ *
+ * EPHEMERAL SESSION TRACKING WITH DUAL STORAGE APPROACH:
+ * The core principle is to use browser storage APIs that have different persistence
+ * characteristics to track user intent and browser state:
+ *
+ * - sessionStorage: Cleared when browser truly closes (ephemeral sessions)
+ * - localStorage: Persists across browser restarts (persistent sessions)
+ * - Combination logic: Track which storage type should be authoritative
+ *
+ * Conceptual flow:
+ * 1. On login, set markers in appropriate storage based on rememberMe choice
+ * 2. On page load, check storage markers against active session state
+ * 3. Force sign-out when storage indicates session should have expired
+ * 4. Use client-side validators that run early in app initialization
+ *
+ * This approach leverages the fact that sessionStorage has more reliable
+ * browser-close behavior than session cookies, while localStorage provides
+ * the persistence needed for "remember me" functionality.
+ *
+ * IMPLEMENTATION CONSIDERATIONS:
+ * - HttpOnly cookies cannot be read by JavaScript (security feature)
+ * - Client-side session validation should use auth library APIs, not direct cookie access
+ * - Storage markers need to be cleared on explicit sign-out to prevent conflicts
+ * - Consider edge cases like manual storage clearing or multiple tabs
+ */
