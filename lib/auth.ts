@@ -42,6 +42,11 @@ export const auth = betterAuth({
     updateAccountOnSignIn: true,
     accountLinking: {
       enabled: true,
+      // Enforce same-email linking only. If a user tries to link an account with a different
+      // email, better-auth will reject the link attempt. Additionally, it's smart enough to
+      // not create an entirely new user account if the emails don't match. We wouldn't want
+      // accidental new user accounts to be created automatically through social linking.
+      allowDifferentEmails: false,
       trustedProviders: ["email-password", "google", "github", "microsoft"],
     },
   },
@@ -87,6 +92,10 @@ export const auth = betterAuth({
   },
   socialProviders: {
     google: {
+      // Google allows passing the "prompt" param to control whether to
+      // re-select the account every time. This can help prevent accidental
+      // sign-ins, sign-ups, or account linking with the wrong account.
+      // prompt: "select_account",
       clientId: googleClientId,
       clientSecret: googleClientSecret,
     },
@@ -95,6 +104,8 @@ export const auth = betterAuth({
       clientSecret: githubClientSecret,
     },
     microsoft: {
+      // See notes for Google above. Microsoft also supports the "prompt" param.
+      // prompt: "select_account",
       clientId: microsoftClientId,
       clientSecret: microsoftClientSecret,
     },
