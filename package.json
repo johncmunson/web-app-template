@@ -11,7 +11,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:check": "drizzle-kit check",
-    "db:reset": "drizzle-kit push && ts-node src/db/seed.ts (not implemented yet)"
+    "db:reset": "drizzle-kit push && ts-node src/db/seed.ts (not implemented yet)",
+    "db:nuke": "psql -f db/scripts/truncate_all.sql"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
