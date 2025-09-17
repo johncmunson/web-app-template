@@ -8,6 +8,7 @@ import {
   sendPasswordResetEmail,
   sendVerificationEmail,
 } from "@/lib/email-services"
+import { afterHook } from "@/lib/auth-request-hooks"
 
 const nodeEnv = getEnvVar("NODE_ENV")
 const isProd = nodeEnv === "production"
@@ -26,6 +27,9 @@ export const auth = betterAuth({
     usePlural: true,
     debugLogs: !isProd,
   }),
+  hooks: {
+    after: afterHook,
+  },
   advanced: {
     database: {
       generateId: false,
