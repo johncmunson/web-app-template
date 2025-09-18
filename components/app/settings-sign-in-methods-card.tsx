@@ -25,12 +25,23 @@ import {
   Unplug,
   RotateCcw,
   ExternalLink,
+  Mail,
 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface Provider {
-  id: "google" | "github" | "microsoft"
+  id: "password" | "google" | "github" | "microsoft"
   name: string
   detailWhenDisconnected: string
   isConnected: boolean
@@ -61,7 +72,18 @@ async function fakeApiConnect(): Promise<void> {
 }
 
 export function SettingsSignInMethodsCard() {
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false)
+  const [passwordValue, setPasswordValue] = React.useState("")
+  const [isSettingPassword, setIsSettingPassword] = React.useState(false)
   const [providers, setProviders] = React.useState<Provider[]>([
+    {
+      id: "password",
+      name: "Email/Password",
+      detailWhenDisconnected: "Enable email + password login",
+      isConnected: false,
+      lastUsed: null,
+      icon: <Mail />,
+    },
     {
       id: "google",
       name: "Google",
@@ -96,6 +118,11 @@ export function SettingsSignInMethodsCard() {
   }
 
   const onConnect = async (id: Provider["id"]) => {
+    if (id === "password") {
+      // Open dialog to set a password instead of immediate connect
+      setIsPasswordDialogOpen(true)
+      return
+    }
     setProvider(id, (p) => ({ ...p, connecting: true }))
     try {
       await fakeApiConnect()
@@ -129,6 +156,33 @@ export function SettingsSignInMethodsCard() {
     } catch (_err) {
       setProvider(id, (p) => ({ ...p, connecting: false }))
       toast.error("Failed to connect account")
+    }
+  }
+
+  const handleConfirmSetPassword = async () => {
+    if (!passwordValue || passwordValue.trim().length < 8) {
+      toast.error("Password must be at least 8 characters")
+      return
+    }
+    setIsSettingPassword(true)
+    try {
+      await fakeApiConnect()
+      // On success, enable password provider
+      setProvider("password", (p) => ({
+        ...p,
+        isConnected: true,
+        lastUsed: new Date(),
+      }))
+      setIsPasswordDialogOpen(false)
+      toast.success(
+        "Email/password sign-in enabled. You can now log in with your email and password.",
+      )
+      setPasswordValue("")
+    } catch (_err) {
+      setIsPasswordDialogOpen(false)
+      toast.error("Failed to set password. Please try again.")
+    } finally {
+      setIsSettingPassword(false)
     }
   }
 
@@ -194,30 +248,50 @@ export function SettingsSignInMethodsCard() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="size-8 cursor-pointer"
                         aria-label={`More options for ${p.name}`}
                       >
-                        <MoreHorizontal className="h-4 w-4" />
+                        <MoreHorizontal />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuItem
-                        onClick={() => toast(`Opening ${p.name}…`)}
-                      >
-                        <ExternalLink />
-                        Manage on {p.name}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onReauth(p.id)}>
-                        <RotateCcw />
-                        Re-authenticate
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onDisconnect(p.id)}
-                        variant="destructive"
-                      >
-                        <Unplug />
-                        Disconnect
-                      </DropdownMenuItem>
+                      {p.id === "password" ? (
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => setIsPasswordDialogOpen(true)}
+                          >
+                            <RotateCcw />
+                            Change Password
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onDisconnect(p.id)}
+                            variant="destructive"
+                          >
+                            <Unplug />
+                            Disconnect
+                          </DropdownMenuItem>
+                        </>
+                      ) : (
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => toast(`Opening ${p.name}…`)}
+                          >
+                            <ExternalLink />
+                            Manage on {p.name}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onReauth(p.id)}>
+                            <RotateCcw />
+                            Re-authenticate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onDisconnect(p.id)}
+                            variant="destructive"
+                          >
+                            <Unplug />
+                            Disconnect
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
@@ -245,6 +319,55 @@ export function SettingsSignInMethodsCard() {
           address.
         </p>
       </CardFooter>
+      {/* Password setup/change dialog */}
+      <Dialog
+        open={isPasswordDialogOpen}
+        onOpenChange={setIsPasswordDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set your password</DialogTitle>
+            <DialogDescription>
+              By setting a password, you&apos;ll be able to sign in using your
+              email and password in addition to any connected providers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="settings-password">Password</Label>
+            <Input
+              id="settings-password"
+              type="password"
+              placeholder="Enter a strong password"
+              value={passwordValue}
+              onChange={(e) => setPasswordValue(e.target.value)}
+              disabled={isSettingPassword}
+            />
+            <p className="text-xs text-muted-foreground">
+              Minimum 8 characters. Use a mix of letters, numbers, and symbols.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsPasswordDialogOpen(false)}
+              disabled={isSettingPassword}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmSetPassword}
+              disabled={isSettingPassword}
+            >
+              {isSettingPassword && (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              )}
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
