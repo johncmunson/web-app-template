@@ -59,7 +59,7 @@ export function SocialAuthButtons({
             key={p.id}
             type="button"
             variant="outline"
-            className="w-full gap-2 cursor-pointer"
+            className={cn("w-full gap-2", loading ? "" : "cursor-pointer")}
             disabled={loading}
             onClick={async () => {
               await onSignInSocialClick(p.id)

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AuthCard } from "@/components/app/auth-card"
 import { useAuthHelpers } from "@/hooks/use-auth-helpers"
+import { cn } from "@/lib/utils"
 
 export default function SignUp() {
   const {
@@ -146,7 +147,7 @@ export default function SignUp() {
       </div> */}
       <Button
         type="submit"
-        className="w-full cursor-pointer"
+        className={cn("w-full", loading ? "" : "cursor-pointer")}
         disabled={loading}
       >
         Create an account

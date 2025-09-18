@@ -351,6 +351,7 @@ export function SettingsSignInMethodsCard() {
               type="button"
               variant="outline"
               onClick={() => setIsPasswordDialogOpen(false)}
+              className={cn(isSettingPassword ? "" : "cursor-pointer")}
               disabled={isSettingPassword}
             >
               Cancel
@@ -358,6 +359,7 @@ export function SettingsSignInMethodsCard() {
             <Button
               type="button"
               onClick={handleConfirmSetPassword}
+              className={cn(isSettingPassword ? "" : "cursor-pointer")}
               disabled={isSettingPassword}
             >
               {isSettingPassword && (
