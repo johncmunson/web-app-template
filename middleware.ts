@@ -63,6 +63,7 @@ const isPublicAuthRoute = createRouteMatcher([
   /^\/sign-up($|\/.*)/,
   /^\/forgot-password($|\/.*)/,
   /^\/verify-email($|\/.*)/,
+  /^\/reset-password($|\/.*)/,
 ])
 
 /**
