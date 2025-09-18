@@ -20,7 +20,13 @@ import {
 import { GithubIcon } from "@/components/icons/github-icon"
 import { GoogleIcon } from "@/components/icons/google-icon"
 import { MicrosoftIcon } from "@/components/icons/microsoft-icon"
-import { MoreHorizontal, Loader2 } from "lucide-react"
+import {
+  MoreHorizontal,
+  Loader2,
+  Unplug,
+  RotateCcw,
+  ExternalLink,
+} from "lucide-react"
 import { toast } from "sonner"
 
 interface Provider {
@@ -169,15 +175,18 @@ export function SettingsSignInMethodsCard() {
                       <DropdownMenuItem
                         onClick={() => toast(`Opening ${p.name}…`)}
                       >
+                        <ExternalLink />
                         Manage on {p.name}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onReauth(p.id)}>
+                        <RotateCcw />
                         Re-authenticate
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onDisconnect(p.id)}
-                        className="text-destructive focus:text-destructive"
+                        variant="destructive"
                       >
+                        <Unplug />
                         Disconnect
                       </DropdownMenuItem>
                     </DropdownMenuContent>
