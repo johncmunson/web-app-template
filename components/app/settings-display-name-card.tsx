@@ -59,12 +59,13 @@ export function SettingsDisplayNameCard() {
           disabled={isSaving}
         />
       </CardContent>
-      <CardFooter className="bg-muted/70 border-t !py-4">
+      <CardFooter className="bg-muted/70 border-t h-16 !py-4">
         <p className="text-sm text-muted-foreground">
           Please use 32 characters at maximum.
         </p>
         <Button
           type="button"
+          size="sm"
           className={cn("ml-auto", !disableSave && "cursor-pointer")}
           disabled={disableSave}
           onClick={handleSave}

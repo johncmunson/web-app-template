@@ -163,6 +163,7 @@ export function SettingsSignInMethodsCard() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
+                        type="button"
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
@@ -194,9 +195,10 @@ export function SettingsSignInMethodsCard() {
                 </>
               ) : (
                 <Button
+                  type="button"
+                  size="sm"
                   onClick={() => onConnect(p.id)}
                   disabled={p.connecting}
-                  className="ml-2"
                 >
                   {p.connecting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -212,7 +214,7 @@ export function SettingsSignInMethodsCard() {
           </div>
         ))}
       </CardContent>
-      <CardFooter className="bg-muted/70 border-t !py-4">
+      <CardFooter className="bg-muted/70 border-t h-16 !py-4">
         <p className="text-sm text-muted-foreground">
           All connected sign-in methods must use the same associated email
           address.

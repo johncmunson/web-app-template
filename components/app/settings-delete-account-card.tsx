@@ -70,11 +70,12 @@ export function SettingsDeleteAccountCard() {
           certain.
         </CardDescription>
       </CardHeader>
-      <CardFooter className="bg-destructive/10 border-t border-destructive/30 !py-4">
+      <CardFooter className="bg-destructive/10 border-t border-destructive/30 h-16 !py-4">
         <AlertDialog open={open} onOpenChange={setOpen}>
           <AlertDialogTrigger asChild>
             <Button
               type="button"
+              size="sm"
               variant="destructive"
               className="ml-auto cursor-pointer bg-destructive/50"
             >

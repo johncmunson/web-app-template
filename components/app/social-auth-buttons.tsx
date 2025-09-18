@@ -57,6 +57,7 @@ export function SocialAuthButtons({
         {providers.map((p) => (
           <Button
             key={p.id}
+            type="button"
             variant="outline"
             className="w-full gap-2 cursor-pointer"
             disabled={loading}
