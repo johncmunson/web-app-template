@@ -61,8 +61,8 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     // Automatically sign in the user after sign up
     autoSignIn: true,
+    // Send an email to the user with a link to reset their password
     sendResetPassword: async (data, request) => {
-      // Send an email to the user with a link to reset their password
       const baseUrl =
         process.env.NEXT_PUBLIC_APP_URL || getEnvVar("BETTER_AUTH_URL")
       const resetUrl = `${baseUrl}/reset-password?token=${data.token}`
