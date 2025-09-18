@@ -8,7 +8,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Separator } from "@/components/ui/separator"
 import {
   Card,
   CardContent,
@@ -28,6 +27,7 @@ import {
   ExternalLink,
 } from "lucide-react"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 interface Provider {
   id: "google" | "github" | "microsoft"
@@ -39,9 +39,17 @@ interface Provider {
   icon: React.ReactNode
 }
 
-function formatLastUsed(date?: Date | null) {
+export function formatLastUsed(
+  date?: Date | null,
+  locale: Intl.LocalesArgument = "en-US", // default is explicit to avoid SSR hydration mismatches
+): string {
   if (!date) return ""
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+
+  return new Intl.DateTimeFormat(locale, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date)
 }
 
 async function fakeApiConnect(): Promise<void> {
@@ -97,9 +105,8 @@ export function SettingsSignInMethodsCard() {
         connecting: false,
         lastUsed: new Date(),
       }))
-    } catch (e) {
+    } catch (_err) {
       setProvider(id, (p) => ({ ...p, connecting: false }))
-      // Required by the prompt
       toast.error("Failed to connect account")
     }
   }
@@ -119,7 +126,7 @@ export function SettingsSignInMethodsCard() {
         isConnected: true,
       }))
       toast("Re-authenticated")
-    } catch (e) {
+    } catch (_err) {
       setProvider(id, (p) => ({ ...p, connecting: false }))
       toast.error("Failed to connect account")
     }
@@ -134,32 +141,53 @@ export function SettingsSignInMethodsCard() {
           an OAuth provider for seamless, secure authentication.
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-0">
-        {providers.map((p, idx) => (
-          <div
-            key={p.id}
-            className="flex items-center justify-between px-4 py-4"
-          >
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5">{p.icon}</div>
-              <div className="space-y-1">
+      <CardContent className="divide-y">
+        {providers.map((p, index) => {
+          const connected = p.isConnected
+          const connecting = Boolean(p.connecting)
+          const lastUsed = formatLastUsed(p.lastUsed)
+          return (
+            // Each row is a responsive grid with three zones: [icon] [label/description] [actions]
+            <div
+              key={p.id}
+              className={cn(
+                "grid grid-cols-[auto_1fr_auto] items-center gap-5",
+                index === 0
+                  ? "pb-4"
+                  : index === providers.length - 1
+                    ? "pt-4"
+                    : "py-4",
+              )}
+            >
+              {p.icon}
+              <div className="space-y-1 min-w-0">
                 <div className="font-medium leading-none">{p.name}</div>
+                {/* Keep a single text line that switches content based on connection state. */}
                 <div className="text-sm text-muted-foreground">
-                  {p.isConnected ? (
-                    <span className="">Connected</span>
+                  {connected ? (
+                    <span>
+                      Connected
+                      {/* On small screens, include last-used inline to keep info visible */}
+                      {lastUsed ? (
+                        <span className="sm:hidden">
+                          {" "}
+                          • Last used {lastUsed}
+                        </span>
+                      ) : null}
+                    </span>
                   ) : (
                     <span>{p.detailWhenDisconnected}</span>
                   )}
                 </div>
               </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {p.isConnected ? (
-                <>
+              <div className="flex items-center gap-2">
+                {/* On larger screens, show last-used on the right to balance the row */}
+                {connected && lastUsed ? (
                   <span className="text-sm text-muted-foreground hidden sm:inline-block">
-                    Last used {formatLastUsed(p.lastUsed)}
+                    Last used {lastUsed}
                   </span>
+                ) : null}
+                {connected ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -192,29 +220,26 @@ export function SettingsSignInMethodsCard() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </>
-              ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => onConnect(p.id)}
-                  disabled={p.connecting}
-                >
-                  {p.connecting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Connect
-                </Button>
-              )}
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => onConnect(p.id)}
+                    className={cn(connecting ? "" : "cursor-pointer")}
+                    disabled={connecting}
+                  >
+                    {connecting && (
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                    )}
+                    Connect
+                  </Button>
+                )}
+              </div>
             </div>
-
-            {idx < providers.length - 1 && (
-              <Separator className="absolute left-0 right-0 bottom-0" />
-            )}
-          </div>
-        ))}
+          )
+        })}
       </CardContent>
-      <CardFooter className="bg-muted/70 border-t h-16 !py-4">
+      <CardFooter className="bg-muted/70 border-t min-h-16 !py-4">
         <p className="text-sm text-muted-foreground">
           All connected sign-in methods must use the same associated email
           address.

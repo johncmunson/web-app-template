@@ -151,7 +151,7 @@ export function SettingsAvatarCard() {
           />
         </CardAction>
       </CardHeader>
-      <CardFooter className="bg-muted/70 border-t h-16 !py-4">
+      <CardFooter className="bg-muted/70 border-t min-h-16 !py-4">
         <p className="text-sm text-muted-foreground">
           An avatar is optional but strongly recommended.
         </p>

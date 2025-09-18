@@ -59,7 +59,7 @@ export function SettingsDisplayNameCard() {
           disabled={isSaving}
         />
       </CardContent>
-      <CardFooter className="bg-muted/70 border-t h-16 !py-4">
+      <CardFooter className="bg-muted/70 border-t min-h-16 !py-4">
         <p className="text-sm text-muted-foreground">
           Please use 32 characters at maximum.
         </p>
