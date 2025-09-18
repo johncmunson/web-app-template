@@ -13,6 +13,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -119,7 +120,7 @@ export function SettingsSignInMethodsCard() {
   }
 
   return (
-    <Card>
+    <Card className="pb-0">
       <CardHeader>
         <CardTitle className="text-xl">Sign-in Methods</CardTitle>
         <CardDescription className="text-base text-card-foreground">
@@ -202,6 +203,12 @@ export function SettingsSignInMethodsCard() {
           </div>
         ))}
       </CardContent>
+      <CardFooter className="bg-muted/70 border-t !py-4">
+        <p className="text-sm text-muted-foreground">
+          All connected sign-in methods must use the same associated email
+          address.
+        </p>
+      </CardFooter>
     </Card>
   )
 }
