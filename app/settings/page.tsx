@@ -1,6 +1,7 @@
 import { SettingsAvatarCard } from "@/components/app/settings-avatar-card"
 import { SettingsDeleteAccountCard } from "@/components/app/settings-delete-account-card"
 import { SettingsDisplayNameCard } from "@/components/app/settings-display-name-card"
+import { SettingsSignInMethodsCard } from "@/components/app/settings-sign-in-methods-card"
 
 export default function Page() {
   return (
@@ -8,6 +9,7 @@ export default function Page() {
     <div className="m-8 grid gap-8">
       <SettingsAvatarCard />
       <SettingsDisplayNameCard />
+      <SettingsSignInMethodsCard />
       <SettingsDeleteAccountCard />
     </div>
   )
