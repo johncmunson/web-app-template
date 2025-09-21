@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, FormEvent } from "react"
-import { useSearchParams } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
 import {
@@ -18,9 +17,6 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 export default function ForgotPasswordPage() {
-  const searchParams = useSearchParams()
-  const callbackURL = searchParams.get("callbackURL") || "/"
-
   const [email, setEmail] = useState("")
   const [pending, setPending] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -87,10 +83,7 @@ export default function ForgotPasswordPage() {
         <CardFooter className="justify-center">
           <p className="text-sm">
             Remembered your password?{" "}
-            <Link
-              href={`/sign-in${callbackURL ? `?callbackURL=${encodeURIComponent(callbackURL)}` : ""}`}
-              className="underline"
-            >
+            <Link href="/sign-in" className="underline">
               Back to sign in
             </Link>
           </p>
