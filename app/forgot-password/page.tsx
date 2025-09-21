@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, FormEvent } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
 import {
@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 export default function ForgotPasswordPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const callbackURL = searchParams.get("callbackURL") || "/"
 
@@ -40,13 +39,12 @@ export default function ForgotPasswordPage() {
         email,
         redirectTo: `${origin}/reset-password${callbackURL ? `?callbackURL=${encodeURIComponent(callbackURL)}` : ""}`,
       })
-      setSubmitted(true)
-      toast.success("If an account exists, we sent a reset link.")
-    } catch (err: any) {
-      // Even on error we can show the same message to avoid user enumeration
-      toast.success("If an account exists, we sent a reset link.")
+    } catch (err) {
+      console.error("requestPasswordReset failed", err)
     } finally {
+      setSubmitted(true)
       setPending(false)
+      toast.success("If an account exists, we sent a reset link.")
     }
   }
 

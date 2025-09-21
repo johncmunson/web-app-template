@@ -59,7 +59,8 @@ export default function ResetPasswordPage() {
         return
       }
       toast.success("Password reset. Please sign in.")
-      router.push(signInHref)
+      // Use replace instead of push to avoid navigating back to a used token
+      router.replace(signInHref)
     } finally {
       setPending(false)
     }
