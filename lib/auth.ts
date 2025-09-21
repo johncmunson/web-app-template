@@ -63,13 +63,16 @@ export const auth = betterAuth({
     autoSignIn: true,
     // Send an email to the user with a link to reset their password
     sendResetPassword: async (data, request) => {
+      // Prefer the URL provided by Better Auth (respects client-supplied redirectTo),
+      // and fallback to constructing from env if unavailable.
       const baseUrl =
         process.env.NEXT_PUBLIC_APP_URL || getEnvVar("BETTER_AUTH_URL")
-      const resetUrl = `${baseUrl}/reset-password?token=${data.token}`
+      const fallbackUrl = `${baseUrl}/reset-password?token=${data.token}`
+      const url = data.url || fallbackUrl
 
       const result = await sendPasswordResetEmail(
         { email: data.user.email, name: data.user.name },
-        resetUrl,
+        url,
       )
 
       if (!result.success) {

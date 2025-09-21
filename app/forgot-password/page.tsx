@@ -1,0 +1,102 @@
+"use client"
+
+import { useState, FormEvent } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { authClient } from "@/lib/auth-client"
+import { toast } from "sonner"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+
+export default function ForgotPasswordPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackURL = searchParams.get("callbackURL") || "/"
+
+  const [email, setEmail] = useState("")
+  const [pending, setPending] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (pending) return
+    if (!email.trim()) {
+      toast.error("Please enter your email")
+      return
+    }
+    try {
+      setPending(true)
+      const origin = window.location.origin
+      await authClient.requestPasswordReset({
+        email,
+        redirectTo: `${origin}/reset-password${callbackURL ? `?callbackURL=${encodeURIComponent(callbackURL)}` : ""}`,
+      })
+      setSubmitted(true)
+      toast.success("If an account exists, we sent a reset link.")
+    } catch (err: any) {
+      // Even on error we can show the same message to avoid user enumeration
+      toast.success("If an account exists, we sent a reset link.")
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-lg md:text-xl">Forgot password</CardTitle>
+          <CardDescription className="text-xs md:text-sm">
+            Enter your email and we'll send you a reset link.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="grid gap-4"
+            onSubmit={onSubmit}
+            aria-disabled={pending}
+          >
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={pending || submitted}
+                autoComplete="username"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={pending || submitted}
+            >
+              {pending ? "Sending..." : "Send reset link"}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="justify-center">
+          <p className="text-sm">
+            Remembered your password?{" "}
+            <Link
+              href={`/sign-in${callbackURL ? `?callbackURL=${encodeURIComponent(callbackURL)}` : ""}`}
+              className="underline"
+            >
+              Back to sign in
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
+    </div>
+  )
+}
