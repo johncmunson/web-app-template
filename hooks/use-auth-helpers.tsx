@@ -22,7 +22,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 export function useAuthHelpers() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackURL = searchParams.get("callbackURL") || "/"
+  const callbackURL = searchParams.get("callbackURL") || undefined
   const [loading, setLoading] = useState(false)
   const [signInFields, setSignInFields] = useState({
     email: "",
