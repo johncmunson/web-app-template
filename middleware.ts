@@ -14,7 +14,9 @@ import { createRouteMatcher } from "@/lib/route-matcher"
 function redirectToSignIn(req: NextRequest): NextResponse {
   const original = req.nextUrl.pathname + req.nextUrl.search
   const url = new URL("/sign-in", req.url)
-  url.searchParams.set("callbackURL", original)
+  if (original !== "/") {
+    url.searchParams.set("callbackURL", original)
+  }
   return NextResponse.redirect(url)
 }
 
