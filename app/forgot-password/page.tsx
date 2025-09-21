@@ -27,17 +27,18 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (pending) return
+    if (pending || submitted) return
     if (!email.trim()) {
       toast.error("Please enter your email")
       return
     }
     try {
       setPending(true)
-      const origin = window.location.origin
+      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ""
+      const url = new URL(`${basePath}/reset-password`, window.location.origin)
       await authClient.requestPasswordReset({
         email,
-        redirectTo: `${origin}/reset-password${callbackURL ? `?callbackURL=${encodeURIComponent(callbackURL)}` : ""}`,
+        redirectTo: url.toString(),
       })
     } catch (err) {
       console.error("requestPasswordReset failed", err)

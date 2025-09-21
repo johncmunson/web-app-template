@@ -49,7 +49,7 @@ export default function SignIn() {
         <div>
           <Label htmlFor="password">Password</Label>
           <Link
-            href={`/forgot-password${signInFields.callbackURL ? `?callbackURL=${encodeURIComponent(signInFields.callbackURL)}` : ""}`}
+            href="/forgot-password"
             className={cn(
               "ml-auto inline-block text-xs underline",
               loading && "pointer-events-none opacity-50",

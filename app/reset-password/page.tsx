@@ -22,16 +22,10 @@ export default function ResetPasswordPage() {
   const searchParams = useSearchParams()
   const token = searchParams.get("token") || undefined
   const error = searchParams.get("error") || undefined
-  const callbackURL = searchParams.get("callbackURL") || "/"
 
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [pending, setPending] = useState(false)
-
-  const signInHref = useMemo(() => {
-    const base = "/sign-in"
-    return `${base}${callbackURL ? `?callbackURL=${encodeURIComponent(callbackURL)}` : ""}`
-  }, [callbackURL])
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -60,7 +54,7 @@ export default function ResetPasswordPage() {
       }
       toast.success("Password reset. Please sign in.")
       // Use replace instead of push to avoid navigating back to a used token
-      router.replace(signInHref)
+      router.replace("/sign-in")
     } finally {
       setPending(false)
     }
@@ -79,10 +73,7 @@ export default function ResetPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardFooter className="justify-center">
-            <Link
-              href={`/forgot-password${callbackURL ? `?callbackURL=${encodeURIComponent(callbackURL)}` : ""}`}
-              className="underline"
-            >
+            <Link href="/forgot-password" className="underline">
               Request new reset link
             </Link>
           </CardFooter>
@@ -102,10 +93,7 @@ export default function ResetPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardFooter className="justify-center">
-            <Link
-              href={`/forgot-password${callbackURL ? `?callbackURL=${encodeURIComponent(callbackURL)}` : ""}`}
-              className="underline"
-            >
+            <Link href="/forgot-password" className="underline">
               Back to forgot password
             </Link>
           </CardFooter>
@@ -159,7 +147,7 @@ export default function ResetPasswordPage() {
           </form>
         </CardContent>
         <CardFooter className="justify-center">
-          <Link href={signInHref} className="underline">
+          <Link href="/sign-in" className="underline">
             Back to sign in
           </Link>
         </CardFooter>
