@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Card,
   CardContent,
@@ -14,25 +14,39 @@ import { Button } from "../ui/button"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { authClient } from "@/lib/auth-client"
 
 export function SettingsDisplayNameCard() {
-  const initialValueRef = useRef<string>("")
-  const [value, setValue] = useState<string>(initialValueRef.current)
+  const { data: session, isPending, error, refetch } = authClient.useSession()
+
+  // Track the initial value independently so we can compute "edited" state
+  const initialValueRef = useRef<string | null>(null)
+  const [value, setValue] = useState<string>("")
   const [isSaving, setIsSaving] = useState(false)
 
-  const isEdited = value !== initialValueRef.current
+  // Initialize from session once
+  useEffect(() => {
+    if (session?.user?.name != null && initialValueRef.current == null) {
+      initialValueRef.current = session.user.name
+      setValue(session.user.name)
+    }
+  }, [session])
+
+  const isEdited =
+    initialValueRef.current != null && value !== initialValueRef.current
   const isEmpty = value.trim().length === 0
   const isTooLong = value.length > 32
-  const disableSave = isSaving || !isEdited || isEmpty || isTooLong
+  const disableSave = isSaving || isPending || !isEdited || isEmpty || isTooLong
 
   async function handleSave() {
     if (disableSave) return
     setIsSaving(true)
     try {
-      // Mock backend call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      // Consider it saved: update "initial" value so button disables again
+      const { error } = await authClient.updateUser({ name: value })
+      if (error) throw error
+
       initialValueRef.current = value
+      refetch()
       toast.success("Display name has been updated")
     } catch (error) {
       toast.error("Failed to update display name")
@@ -56,7 +70,7 @@ export function SettingsDisplayNameCard() {
           maxLength={32}
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          disabled={isSaving}
+          disabled={isSaving || isPending || initialValueRef.current == null}
         />
       </CardContent>
       <CardFooter className="bg-muted/70 border-t min-h-16 !py-4">
