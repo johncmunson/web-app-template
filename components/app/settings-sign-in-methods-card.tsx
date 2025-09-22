@@ -529,7 +529,6 @@ export function SettingsSignInMethodsCard() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isSettingPassword}
-                  autoComplete="new-password"
                 />
               </div>
             ) : null}
@@ -543,7 +542,6 @@ export function SettingsSignInMethodsCard() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isSettingPassword}
-                  autoComplete="new-password"
                 />
               </div>
             ) : null}
