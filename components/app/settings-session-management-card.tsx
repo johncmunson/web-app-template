@@ -221,7 +221,7 @@ export function SettingsSessionManagementCard() {
                       </span>
                     ) : null}
                   </div>
-                  <div className="text-sm text-muted-foreground flex flex-col">
+                  <div className="text-sm text-muted-foreground grid grid-cols-1 md:grid-cols-[max-content_max-content] gap-x-6 gap-y-1 w-fit">
                     <span>
                       Created:{" "}
                       <span className="font-medium">
@@ -248,7 +248,10 @@ export function SettingsSessionManagementCard() {
                 <Button
                   type="button"
                   size="sm"
-                  className={cn(loading ? "" : "cursor-pointer")}
+                  className={cn(
+                    "w-[109.27px]", // Match width of "Sign out here" text to avoid layout shift
+                    loading ? "" : "cursor-pointer",
+                  )}
                   disabled={loading || !token}
                   onClick={() => revokeOne(token, isCurrent)}
                 >
