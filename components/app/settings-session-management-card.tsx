@@ -158,21 +158,29 @@ export function SettingsSessionManagementCard() {
       <CardContent className="divide-y">
         {isLoading ? (
           // Initial load skeletons
-          [0, 1, 2].map((i) => (
+          [0, 1].map((i) => (
             <div
               key={i}
               className={cn(
-                "grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]",
-                i === 0 ? "pb-4" : i === 2 ? "pt-4" : "py-4",
+                "grid grid-cols-[1fr_auto] gap-4 items-center",
+                i === 0 ? "pb-4" : "pt-4",
               )}
             >
               <div className="space-y-2 animate-pulse">
-                <div className="h-4 w-40 rounded bg-muted" />
-                <div className="h-3 w-full max-w-[520px] rounded bg-muted" />
-                <div className="h-3 w-1/2 rounded bg-muted" />
+                <div className="flex items-center gap-3">
+                  <div className="h-4 w-4 rounded bg-muted" />
+                  <div className="h-4 w-40 rounded bg-muted" />
+                  <div className="h-2 w-12 rounded bg-muted" />
+                </div>
+                <div className="text-sm text-muted-foreground grid grid-cols-1 md:grid-cols-[max-content_max-content] gap-x-6 gap-y-1 w-fit">
+                  <div className="h-3 w-20 rounded bg-muted" />
+                  <div className="h-3 w-20 rounded bg-muted" />
+                  <div className="h-3 w-20 rounded bg-muted" />
+                  <div className="h-3 w-20 rounded bg-muted" />
+                </div>
               </div>
               <div className="flex items-start justify-start sm:justify-end">
-                <div className="h-9 w-24 rounded bg-muted animate-pulse" />
+                <div className="h-9 w-[109.27px] rounded bg-muted" />
               </div>
             </div>
           ))
