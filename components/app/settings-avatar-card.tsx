@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { CircleCheck, CircleX } from "lucide-react"
+import { authClient } from "@/lib/auth-client"
 
 /**
  * SettingsAvatarCard
@@ -31,17 +32,24 @@ import { CircleCheck, CircleX } from "lucide-react"
  * - Initials input accepts exactly two characters, displays uppercase, and only then enables confirm.
  */
 export function SettingsAvatarCard() {
+  const { data: session, refetch } = authClient.useSession()
   const [open, setOpen] = React.useState(false)
   const [menuMode, setMenuMode] = React.useState<
     "root" | "linked" | "initials"
   >("root")
-  const [avatarSrc, setAvatarSrc] = React.useState<string | null>(
-    "https://github.com/shadcn.png",
-  )
-  const [initials, setInitials] = React.useState<string | null>("CN")
-
   const [initialsDraft, setInitialsDraft] = React.useState("")
+  const [isUploading, setIsUploading] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  const avatarSrc = session?.user.image || null
+  const initials = session?.user.name
+    ? session.user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "CN"
 
   // Reset state when menu closes
   React.useEffect(() => {
@@ -55,19 +63,35 @@ export function SettingsAvatarCard() {
     fileInputRef.current?.click()
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const url = URL.createObjectURL(file)
-    setAvatarSrc(url)
-    setInitials(null)
+    setIsUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const res = await fetch("/api/upload-avatar", {
+        method: "POST",
+        body: formData,
+      })
+      if (res.ok) {
+        await refetch()
+        setOpen(false)
+      } else {
+        // Handle error, perhaps show toast
+        console.error("Upload failed")
+      }
+    } catch (error) {
+      console.error("Upload error", error)
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   function confirmInitials() {
     if (initialsDraft.length === 2) {
-      setInitials(initialsDraft)
-      setAvatarSrc(null)
-      setOpen(false) // close after confirming
+      // For now, just close, as initials are computed from name
+      setOpen(false)
     }
   }
 
@@ -90,9 +114,7 @@ export function SettingsAvatarCard() {
                   {avatarSrc ? (
                     <AvatarImage src={avatarSrc} alt="User avatar" />
                   ) : null}
-                  <AvatarFallback>
-                    {(initials ?? "").toUpperCase() || "?"}
-                  </AvatarFallback>
+                  <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
@@ -102,7 +124,6 @@ export function SettingsAvatarCard() {
                 <RootMenu
                   onUpload={() => {
                     handlePickFile()
-                    setOpen(false)
                   }}
                   onUseLinked={(e) => {
                     e.preventDefault() // keep menu open while swapping content
