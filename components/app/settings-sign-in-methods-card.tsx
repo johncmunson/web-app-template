@@ -39,9 +39,11 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { authClient } from "@/lib/auth-client"
+import { setPasswordAction } from "@/app/actions/auth"
 
 interface Provider {
-  id: "password" | "google" | "github" | "microsoft"
+  id: "credential" | "google" | "github" | "microsoft"
   name: string
   detailWhenDisconnected: string
   isConnected: boolean
@@ -63,21 +65,21 @@ export function formatLastUsed(
   }).format(date)
 }
 
-async function fakeApiConnect(): Promise<void> {
-  // Simulate latency and a ~25% failure rate
-  await new Promise((r) => setTimeout(r, 1200))
-  if (Math.random() < 0.25) {
-    throw new Error("connect-failed")
-  }
+function capitalize(s: string) {
+  return s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s
 }
 
 export function SettingsSignInMethodsCard() {
+  const [isLoading, setIsLoading] = React.useState(true)
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false)
-  const [passwordValue, setPasswordValue] = React.useState("")
+  // Dialog state
+  const [dialogMode, setDialogMode] = React.useState<"set" | "change">("set")
+  const [currentPassword, setCurrentPassword] = React.useState("")
+  const [newPassword, setNewPassword] = React.useState("")
   const [isSettingPassword, setIsSettingPassword] = React.useState(false)
-  const [providers, setProviders] = React.useState<Provider[]>([
+  const defaultProviders: Provider[] = [
     {
-      id: "password",
+      id: "credential",
       name: "Email/Password",
       detailWhenDisconnected: "Enable email + password login",
       isConnected: false,
@@ -108,7 +110,55 @@ export function SettingsSignInMethodsCard() {
       lastUsed: null,
       icon: <MicrosoftIcon />,
     },
-  ])
+  ]
+
+  const [providers, setProviders] = React.useState<Provider[]>(defaultProviders)
+
+  const loadLinkedProviders = React.useCallback(async () => {
+    setIsLoading(true)
+    try {
+      // Some versions return an array; others return { data }
+      const result = await authClient.listAccounts()
+      const accounts = result.data || []
+
+      const latestDates: Partial<Record<Provider["id"], Date>> = {}
+      const connectedSet = new Set<Provider["id"]>()
+
+      // Type guard to ensure we only use supported provider ids
+      const isSupported = (id: string): id is Provider["id"] =>
+        defaultProviders.some((p) => p.id === id)
+
+      for (const acc of accounts) {
+        const id = String(acc.providerId ?? "").toLowerCase()
+        if (!isSupported(id)) continue
+        connectedSet.add(id)
+        const updated = acc.updatedAt || acc.createdAt
+        if (updated && !Number.isNaN(updated.getTime())) {
+          const prev = latestDates[id]
+          if (!prev || updated > prev) latestDates[id] = updated
+        }
+      }
+
+      setProviders(() =>
+        defaultProviders.map((p) => ({
+          ...p,
+          isConnected: connectedSet.has(p.id),
+          lastUsed: latestDates[p.id] ?? null,
+          connecting: false,
+        })),
+      )
+    } catch (_err) {
+      toast.error("Failed to load sign-in methods")
+      // Fall back to defaults (all disconnected)
+      setProviders(defaultProviders)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    void loadLinkedProviders()
+  }, [loadLinkedProviders])
 
   const setProvider = (
     id: Provider["id"],
@@ -118,69 +168,121 @@ export function SettingsSignInMethodsCard() {
   }
 
   const onConnect = async (id: Provider["id"]) => {
-    if (id === "password") {
+    if (id === "credential") {
       // Open dialog to set a password instead of immediate connect
+      setDialogMode("set")
       setIsPasswordDialogOpen(true)
       return
     }
+    // Link social provider to the current account
     setProvider(id, (p) => ({ ...p, connecting: true }))
     try {
-      await fakeApiConnect()
-      setProvider(id, (p) => ({
-        ...p,
-        isConnected: true,
-        connecting: false,
-        lastUsed: new Date(),
-      }))
+      await authClient.linkSocial({
+        provider: id,
+        callbackURL: "/settings",
+      })
+      // The user will be redirected back to /settings after linking, so no need to reload providers
+      // await loadLinkedProviders()
     } catch (_err) {
-      setProvider(id, (p) => ({ ...p, connecting: false }))
       toast.error("Failed to connect account")
+    } finally {
+      setProvider(id, (p) => ({ ...p, connecting: false }))
     }
   }
 
-  const onDisconnect = (id: Provider["id"]) => {
-    setProvider(id, (p) => ({ ...p, isConnected: false, lastUsed: null }))
+  const onDisconnect = async (id: Provider["id"]) => {
+    if (id !== "credential") {
+      try {
+        setProvider(id, (p) => ({ ...p, connecting: true }))
+        const { error } = await authClient.unlinkAccount({ providerId: id })
+        if (error) throw new Error(error.message)
+        toast.success(`${capitalize(id)} disconnected`)
+        await loadLinkedProviders()
+      } catch (err: any) {
+        toast.error(err?.message || `Failed to disconnect ${id}`)
+      } finally {
+        setProvider(id, (p) => ({ ...p, connecting: false }))
+      }
+      return
+    }
+    // Unlink credential provider from account
+    try {
+      setProvider("credential", (p) => ({ ...p, connecting: true }))
+      const { error } = await authClient.unlinkAccount({
+        providerId: "credential",
+      })
+      if (error) throw new Error(error.message)
+      toast.success("Email/Password disconnected")
+      await loadLinkedProviders()
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to disconnect Email/Password")
+    } finally {
+      setProvider("credential", (p) => ({ ...p, connecting: false }))
+    }
   }
 
   const onReauth = async (id: Provider["id"]) => {
     setProvider(id, (p) => ({ ...p, connecting: true }))
     try {
-      await fakeApiConnect()
-      setProvider(id, (p) => ({
-        ...p,
-        connecting: false,
-        lastUsed: new Date(),
-        isConnected: true,
-      }))
-      toast("Re-authenticated")
+      await authClient.linkSocial({
+        provider: id,
+        callbackURL: "/settings",
+      })
     } catch (_err) {
+      toast.error("Failed to re-authenticate")
+    } finally {
       setProvider(id, (p) => ({ ...p, connecting: false }))
-      toast.error("Failed to connect account")
     }
   }
 
   const handleConfirmSetPassword = async () => {
-    if (!passwordValue || passwordValue.trim().length < 8) {
+    if (!newPassword || newPassword.trim().length < 8) {
       toast.error("Password must be at least 8 characters")
       return
     }
     setIsSettingPassword(true)
     try {
-      await fakeApiConnect()
-      // On success, enable password provider
-      setProvider("password", (p) => ({
-        ...p,
-        isConnected: true,
-        lastUsed: new Date(),
-      }))
+      // Server action: sets credential password and links Email/Password
+      await setPasswordAction(newPassword.trim())
+      await loadLinkedProviders()
       setIsPasswordDialogOpen(false)
       toast.success(
         "Email/password sign-in enabled. You can now log in with your email and password.",
       )
-      setPasswordValue("")
-    } catch (_err) {
+      setCurrentPassword("")
+      setNewPassword("")
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to set password")
+    } finally {
+      setIsSettingPassword(false)
+    }
+  }
+
+  // Change existing password flow reuses the same dialog
+  const handleChangePassword = async () => {
+    if (!currentPassword.trim()) {
+      toast.error("Enter your current password")
+      return
+    }
+    if (!newPassword || newPassword.trim().length < 8) {
+      toast.error("New password must be at least 8 characters")
+      return
+    }
+    setIsSettingPassword(true)
+    try {
+      const { error } = await authClient.changePassword({
+        newPassword: newPassword.trim(),
+        currentPassword: currentPassword.trim(),
+        revokeOtherSessions: true,
+      })
+      if (error) throw new Error(error.message)
       setIsPasswordDialogOpen(false)
-      toast.error("Failed to set password. Please try again.")
+      toast.success("Password updated")
+      setCurrentPassword("")
+      setNewPassword("")
+      await loadLinkedProviders()
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to change password")
     } finally {
       setIsSettingPassword(false)
     }
@@ -196,122 +298,142 @@ export function SettingsSignInMethodsCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="divide-y">
-        {providers.map((p, index) => {
-          const connected = p.isConnected
-          const connecting = Boolean(p.connecting)
-          const lastUsed = formatLastUsed(p.lastUsed)
-          return (
-            // Each row is a responsive grid with three zones: [icon] [label/description] [actions]
-            <div
-              key={p.id}
-              className={cn(
-                "grid grid-cols-[auto_1fr_auto] items-center gap-5",
-                index === 0
-                  ? "pb-4"
-                  : index === providers.length - 1
-                    ? "pt-4"
-                    : "py-4",
-              )}
-            >
-              {p.icon}
-              <div className="space-y-1 min-w-0">
-                <div className="font-medium leading-none">{p.name}</div>
-                {/* Keep a single text line that switches content based on connection state. */}
-                <div className="text-sm text-muted-foreground">
-                  {connected ? (
-                    <span>
-                      Connected
-                      {/* On small screens, include last-used inline to keep info visible */}
-                      {lastUsed ? (
-                        <span className="sm:hidden">
-                          {" "}
-                          • Last used {lastUsed}
-                        </span>
-                      ) : null}
-                    </span>
-                  ) : (
-                    <span>{p.detailWhenDisconnected}</span>
-                  )}
+        {isLoading
+          ? [0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={cn(
+                  "grid grid-cols-[auto_1fr_auto] items-center gap-5",
+                  i === 0 ? "pb-4" : i === 3 ? "pt-4" : "py-4",
+                )}
+              >
+                <div className="size-5 rounded bg-muted animate-pulse" />
+                <div className="space-y-2 w-full max-w-[520px]">
+                  <div className="h-4 w-40 rounded bg-muted animate-pulse" />
+                  <div className="h-3 w-3/4 rounded bg-muted animate-pulse" />
                 </div>
+                <div className="h-9 w-20 rounded bg-muted animate-pulse" />
               </div>
-              <div className="flex items-center gap-2">
-                {/* On larger screens, show last-used on the right to balance the row */}
-                {connected && lastUsed ? (
-                  <span className="text-sm text-muted-foreground hidden sm:inline-block">
-                    Last used {lastUsed}
-                  </span>
-                ) : null}
-                {connected ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+            ))
+          : providers.map((p, index) => {
+              const connected = p.isConnected
+              const connecting = Boolean(p.connecting)
+              const lastUsed = formatLastUsed(p.lastUsed)
+              return (
+                // Each row is a responsive grid with three zones: [icon] [label/description] [actions]
+                <div
+                  key={p.id}
+                  className={cn(
+                    "grid grid-cols-[auto_1fr_auto] items-center gap-5",
+                    index === 0
+                      ? "pb-4"
+                      : index === providers.length - 1
+                        ? "pt-4"
+                        : "py-4",
+                  )}
+                >
+                  {p.icon}
+                  <div className="space-y-1 min-w-0">
+                    <div className="font-medium leading-none">{p.name}</div>
+                    {/* Keep a single text line that switches content based on connection state. */}
+                    <div className="text-sm text-muted-foreground">
+                      {connected ? (
+                        <span>
+                          Connected
+                          {/* On small screens, include last-used inline to keep info visible */}
+                          {lastUsed ? (
+                            <span className="sm:hidden">
+                              {" "}
+                              • Last used {lastUsed}
+                            </span>
+                          ) : null}
+                        </span>
+                      ) : (
+                        <span>{p.detailWhenDisconnected}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* On larger screens, show last-used on the right to balance the row */}
+                    {connected && lastUsed ? (
+                      <span className="text-sm text-muted-foreground hidden sm:inline-block">
+                        Last used {lastUsed}
+                      </span>
+                    ) : null}
+                    {connected ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 cursor-pointer"
+                            aria-label={`More options for ${p.name}`}
+                          >
+                            <MoreHorizontal />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          {p.id === "credential" ? (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setDialogMode("change")
+                                  setIsPasswordDialogOpen(true)
+                                }}
+                              >
+                                <RotateCcw />
+                                Change Password
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => onDisconnect(p.id)}
+                                variant="destructive"
+                              >
+                                <Unplug />
+                                Disconnect
+                              </DropdownMenuItem>
+                            </>
+                          ) : (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => toast(`Opening ${p.name}…`)}
+                              >
+                                <ExternalLink />
+                                Manage on {p.name}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => onReauth(p.id)}>
+                                <RotateCcw />
+                                Re-authenticate
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => onDisconnect(p.id)}
+                                variant="destructive"
+                              >
+                                <Unplug />
+                                Disconnect
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
                       <Button
                         type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 cursor-pointer"
-                        aria-label={`More options for ${p.name}`}
+                        size="sm"
+                        onClick={() => onConnect(p.id)}
+                        className={cn(connecting ? "" : "cursor-pointer")}
+                        disabled={connecting}
                       >
-                        <MoreHorizontal />
+                        {connecting && (
+                          <Loader2 className="mr-2 size-4 animate-spin" />
+                        )}
+                        Connect
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      {p.id === "password" ? (
-                        <>
-                          <DropdownMenuItem
-                            onClick={() => setIsPasswordDialogOpen(true)}
-                          >
-                            <RotateCcw />
-                            Change Password
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => onDisconnect(p.id)}
-                            variant="destructive"
-                          >
-                            <Unplug />
-                            Disconnect
-                          </DropdownMenuItem>
-                        </>
-                      ) : (
-                        <>
-                          <DropdownMenuItem
-                            onClick={() => toast(`Opening ${p.name}…`)}
-                          >
-                            <ExternalLink />
-                            Manage on {p.name}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onReauth(p.id)}>
-                            <RotateCcw />
-                            Re-authenticate
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => onDisconnect(p.id)}
-                            variant="destructive"
-                          >
-                            <Unplug />
-                            Disconnect
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => onConnect(p.id)}
-                    className={cn(connecting ? "" : "cursor-pointer")}
-                    disabled={connecting}
-                  >
-                    {connecting && (
-                      <Loader2 className="mr-2 size-4 animate-spin" />
                     )}
-                    Connect
-                  </Button>
-                )}
-              </div>
-            </div>
-          )
-        })}
+                  </div>
+                </div>
+              )
+            })}
       </CardContent>
       <CardFooter className="bg-muted/70 border-t min-h-16 !py-4">
         <p className="text-sm text-muted-foreground">
@@ -322,29 +444,64 @@ export function SettingsSignInMethodsCard() {
       {/* Password setup/change dialog */}
       <Dialog
         open={isPasswordDialogOpen}
-        onOpenChange={setIsPasswordDialogOpen}
+        onOpenChange={(open) => {
+          setIsPasswordDialogOpen(open)
+          if (!open) {
+            setCurrentPassword("")
+            setNewPassword("")
+          }
+        }}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Set your password</DialogTitle>
+            <DialogTitle>
+              {dialogMode === "set" ? "Set your password" : "Change password"}
+            </DialogTitle>
             <DialogDescription>
-              By setting a password, you&apos;ll be able to sign in using your
-              email and password in addition to any connected providers.
+              {dialogMode === "set"
+                ? "By setting a password, you'll be able to sign in using your email and password in addition to any connected providers."
+                : "Enter your current password and choose a new one."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="settings-password">Password</Label>
-            <Input
-              id="settings-password"
-              type="password"
-              placeholder="Enter a strong password"
-              value={passwordValue}
-              onChange={(e) => setPasswordValue(e.target.value)}
-              disabled={isSettingPassword}
-            />
-            <p className="text-xs text-muted-foreground">
-              Minimum 8 characters. Use a mix of letters, numbers, and symbols.
-            </p>
+            {dialogMode === "change" ? (
+              <div className="space-y-2">
+                <Label htmlFor="settings-current">Current password</Label>
+                <Input
+                  id="settings-current"
+                  type="password"
+                  placeholder="Enter current password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  disabled={isSettingPassword}
+                  autoComplete="current-password"
+                />
+              </div>
+            ) : null}
+            <div className="space-y-2">
+              <Label htmlFor="settings-new">
+                {dialogMode === "set" ? "Password" : "New password"}
+              </Label>
+              <Input
+                id="settings-new"
+                type="password"
+                placeholder={
+                  dialogMode === "set"
+                    ? "Enter a strong password"
+                    : "Enter a new password"
+                }
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                disabled={isSettingPassword}
+                autoComplete={
+                  dialogMode === "set" ? "new-password" : "new-password"
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Minimum 8 characters. Use a mix of letters, numbers, and
+                symbols.
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -358,14 +515,18 @@ export function SettingsSignInMethodsCard() {
             </Button>
             <Button
               type="button"
-              onClick={handleConfirmSetPassword}
+              onClick={
+                dialogMode === "set"
+                  ? handleConfirmSetPassword
+                  : handleChangePassword
+              }
               className={cn(isSettingPassword ? "" : "cursor-pointer")}
               disabled={isSettingPassword}
             >
               {isSettingPassword && (
                 <Loader2 className="mr-2 size-4 animate-spin" />
               )}
-              Confirm
+              {dialogMode === "set" ? "Confirm" : "Update"}
             </Button>
           </DialogFooter>
         </DialogContent>
