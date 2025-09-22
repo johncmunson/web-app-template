@@ -257,7 +257,7 @@ export function SettingsSessionManagementCard() {
                   type="button"
                   size="sm"
                   className={cn(
-                    "w-[109.27px]", // Match width of "Sign out here" text to avoid layout shift
+                    "min-w-[109.27px]", // Match width of "Sign out here" text to avoid layout shift
                     loading ? "" : "cursor-pointer",
                   )}
                   disabled={loading || !token}
