@@ -22,7 +22,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 export function useAuthHelpers() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackURL = searchParams.get("callbackURL") || undefined
+  const callbackURL = searchParams.get("callbackURL") || "/"
   const [loading, setLoading] = useState(false)
   const [signInFields, setSignInFields] = useState({
     email: "",
@@ -34,9 +34,8 @@ export function useAuthHelpers() {
     title: "Sign In",
     description: "Enter your email below to login to your account",
     // Preserve the callbackURL when navigating to sign up
-    footerHref: callbackURL
-      ? `/sign-up?callbackURL=${callbackURL}`
-      : "/sign-up",
+    footerHref:
+      callbackURL === "/" ? "/sign-up" : `/sign-up?callbackURL=${callbackURL}`,
     footerLinkText: "Sign up",
     footerText: "Don't have an account?",
   }
@@ -59,9 +58,8 @@ export function useAuthHelpers() {
     title: "Sign Up",
     description: "Enter your information to create an account",
     // Preserve the callbackURL when navigating to sign in
-    footerHref: callbackURL
-      ? `/sign-in?callbackURL=${callbackURL}`
-      : "/sign-in",
+    footerHref:
+      callbackURL === "/" ? "/sign-in" : `/sign-in?callbackURL=${callbackURL}`,
     footerLinkText: "Sign in",
     footerText: "Already have an account?",
   }
@@ -131,7 +129,7 @@ export function useAuthHelpers() {
         // user, it doesn't behave the same way because the email is assumed to already be verified by the
         // social provider.
         onSuccess: (_ctx) => {
-          router.push(callbackURL || "/")
+          router.push(callbackURL)
         },
       },
     )
