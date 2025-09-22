@@ -231,7 +231,8 @@ export function SettingsSignInMethodsCard() {
     }
   }
 
-  const handleConfirmSetPassword = async () => {
+  const handleConfirmSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!newPassword || newPassword.trim().length < 8) {
       toast.error("Password must be at least 8 characters")
       return
@@ -264,7 +265,8 @@ export function SettingsSignInMethodsCard() {
   }
 
   // Change existing password flow reuses the same dialog
-  const handleChangePassword = async () => {
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!currentPassword.trim()) {
       toast.error("Enter your current password")
       return
@@ -478,96 +480,101 @@ export function SettingsSignInMethodsCard() {
                 : "Enter your current password and choose a new one."}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            {dialogMode === "change" ? (
+          <form
+            onSubmit={
+              dialogMode === "set"
+                ? handleConfirmSetPassword
+                : handleChangePassword
+            }
+          >
+            <div className="space-y-5">
+              {dialogMode === "change" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="settings-current">Current password</Label>
+                  <Input
+                    id="settings-current"
+                    type="password"
+                    placeholder="Enter current password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    disabled={isSettingPassword}
+                    autoComplete="current-password"
+                  />
+                </div>
+              ) : null}
               <div className="space-y-2">
-                <Label htmlFor="settings-current">Current password</Label>
+                <Label htmlFor="settings-new">
+                  {dialogMode === "set" ? "Password" : "New password"}
+                </Label>
                 <Input
-                  id="settings-current"
+                  id="settings-new"
                   type="password"
-                  placeholder="Enter current password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder={
+                    dialogMode === "set"
+                      ? "Enter a strong password"
+                      : "Enter a new password"
+                  }
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
                   disabled={isSettingPassword}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                 />
               </div>
-            ) : null}
-            <div className="space-y-2">
-              <Label htmlFor="settings-new">
-                {dialogMode === "set" ? "Password" : "New password"}
-              </Label>
-              <Input
-                id="settings-new"
-                type="password"
-                placeholder={
-                  dialogMode === "set"
-                    ? "Enter a strong password"
-                    : "Enter a new password"
-                }
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                disabled={isSettingPassword}
-                autoComplete="new-password"
-              />
-              <p className="text-xs text-muted-foreground">
-                Minimum 8 characters. Use a mix of letters, numbers, and
-                symbols.
-              </p>
+              {dialogMode === "change" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="settings-confirm">Confirm new password</Label>
+                  <Input
+                    id="settings-confirm"
+                    type="password"
+                    placeholder="Re-enter your new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={isSettingPassword}
+                  />
+                </div>
+              ) : null}
+              {dialogMode === "set" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="settings-confirm">Confirm password</Label>
+                  <Input
+                    id="settings-confirm"
+                    type="password"
+                    placeholder="Re-enter your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={isSettingPassword}
+                  />
+                </div>
+              ) : null}
             </div>
-            {dialogMode === "change" ? (
-              <div className="space-y-2">
-                <Label htmlFor="settings-confirm">Confirm new password</Label>
-                <Input
-                  id="settings-confirm"
-                  type="password"
-                  placeholder="Re-enter your new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={isSettingPassword}
-                />
-              </div>
-            ) : null}
-            {dialogMode === "set" ? (
-              <div className="space-y-2">
-                <Label htmlFor="settings-confirm">Confirm password</Label>
-                <Input
-                  id="settings-confirm"
-                  type="password"
-                  placeholder="Re-enter your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={isSettingPassword}
-                />
-              </div>
-            ) : null}
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsPasswordDialogOpen(false)}
-              className={cn(isSettingPassword ? "" : "cursor-pointer")}
-              disabled={isSettingPassword}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={
-                dialogMode === "set"
-                  ? handleConfirmSetPassword
-                  : handleChangePassword
-              }
-              className={cn(isSettingPassword ? "" : "cursor-pointer")}
-              disabled={isSettingPassword}
-            >
-              {isSettingPassword && (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              )}
-              {dialogMode === "set" ? "Confirm" : "Update"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsPasswordDialogOpen(false)}
+                className={cn(isSettingPassword ? "" : "cursor-pointer")}
+                disabled={isSettingPassword}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className={cn(isSettingPassword ? "" : "cursor-pointer")}
+                disabled={
+                  isSettingPassword ||
+                  (dialogMode === "change" && !currentPassword) ||
+                  !newPassword ||
+                  !confirmPassword ||
+                  newPassword !== confirmPassword
+                }
+              >
+                {isSettingPassword && (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                )}
+                {dialogMode === "set" ? "Confirm" : "Update"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </Card>
