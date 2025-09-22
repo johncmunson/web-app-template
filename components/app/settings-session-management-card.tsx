@@ -12,9 +12,15 @@ import {
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import {
+  Loader2,
+  MonitorCheck,
+  Tablet,
+  Smartphone,
+  FileQuestionMark,
+} from "lucide-react"
 import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
+import { capitalize, cn } from "@/lib/utils"
 
 interface DeviceSession {
   id: string
@@ -39,6 +45,19 @@ export function SettingsSessionManagementCard() {
   const [error, setError] = useState<string | null>(null)
 
   const currentToken = currentSession?.session.token
+
+  const getDeviceIcon = (device: Device) => {
+    switch (device) {
+      case "desktop":
+        return MonitorCheck
+      case "tablet":
+        return Tablet
+      case "mobile":
+        return Smartphone
+      default:
+        return FileQuestionMark
+    }
+  }
 
   const formatDateTime = (value?: string | number | Date | null) => {
     if (!value) return "—"
@@ -165,7 +184,14 @@ export function SettingsSessionManagementCard() {
             const lastActive = s.updatedAt
             const expires = s.expiresAt
             const ip = s.ipAddress || "—"
-            const { os, browser, device } = parseUserAgent(s.userAgent || "")
+            const {
+              os: rawOS,
+              browser: rawBrowser,
+              device,
+            } = parseUserAgent(s.userAgent)
+            const os = capitalize(rawOS)
+            const browser = capitalize(rawBrowser)
+            const DeviceIcon = getDeviceIcon(device)
             const loading =
               Boolean(rowLoading[token]) ||
               revokeAllLoading ||
@@ -175,7 +201,7 @@ export function SettingsSessionManagementCard() {
               <div
                 key={token || index}
                 className={cn(
-                  "grid gap-3 sm:grid-cols-[1fr_auto]",
+                  "grid grid-cols-[1fr_auto] gap-4 items-center",
                   index === 0
                     ? "pb-4"
                     : index === sessions.length - 1
@@ -183,10 +209,11 @@ export function SettingsSessionManagementCard() {
                       : "py-4",
                 )}
               >
-                <div className="space-y-1.5 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <DeviceIcon />
                     <div className="font-medium truncate">
-                      {`${browser} on ${os} (${device})`}
+                      {`${browser} on ${os}`}
                     </div>
                     {isCurrent ? (
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-primary uppercase tracking-wide">
@@ -194,46 +221,40 @@ export function SettingsSessionManagementCard() {
                       </span>
                     ) : null}
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      <span>
-                        Created:{" "}
-                        <span className="font-medium">
-                          {formatDateTime(created)}
-                        </span>
+                  <div className="text-sm text-muted-foreground flex flex-col">
+                    <span>
+                      Created:{" "}
+                      <span className="font-medium">
+                        {formatDateTime(created)}
                       </span>
-                      <span>
-                        Last active:{" "}
-                        <span className="font-medium">
-                          {formatDateTime(lastActive)}
-                        </span>
+                    </span>
+                    <span>
+                      Last active:{" "}
+                      <span className="font-medium">
+                        {formatDateTime(lastActive)}
                       </span>
-                      <span>
-                        Expires:{" "}
-                        <span className="font-medium">
-                          {formatDateTime(expires)}
-                        </span>
+                    </span>
+                    <span>
+                      Expires:{" "}
+                      <span className="font-medium">
+                        {formatDateTime(expires)}
                       </span>
-                      <span>
-                        IP: <span className="font-medium">{ip || "—"}</span>
-                      </span>
-                    </div>
+                    </span>
+                    <span>
+                      IP: <span className="font-medium">{ip || "—"}</span>
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-start justify-start sm:justify-end">
-                  <Button
-                    type="button"
-                    size="sm"
-                    className={cn(loading ? "" : "cursor-pointer")}
-                    disabled={loading || !token}
-                    onClick={() => revokeOne(token, isCurrent)}
-                  >
-                    {loading && (
-                      <Loader2 className="mr-2 size-4 animate-spin" />
-                    )}
-                    {isCurrent ? "Sign out here" : "Revoke"}
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  className={cn(loading ? "" : "cursor-pointer")}
+                  disabled={loading || !token}
+                  onClick={() => revokeOne(token, isCurrent)}
+                >
+                  {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
+                  {isCurrent ? "Sign out here" : "Revoke"}
+                </Button>
               </div>
             )
           })

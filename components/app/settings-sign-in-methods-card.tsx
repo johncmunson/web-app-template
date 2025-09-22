@@ -28,7 +28,7 @@ import {
   Mail,
 } from "lucide-react"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
+import { cn, capitalize } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -63,10 +63,6 @@ export function formatLastUsed(
     day: "numeric",
     year: "numeric",
   }).format(date)
-}
-
-function capitalize(s: string) {
-  return s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s
 }
 
 export function SettingsSignInMethodsCard() {

@@ -12,3 +12,7 @@ export function getEnvVar(key: string): string {
   }
   return value
 }
+
+export function capitalize(s: string) {
+  return s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s
+}
