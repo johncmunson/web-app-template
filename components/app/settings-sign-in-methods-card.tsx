@@ -72,10 +72,10 @@ function capitalize(s: string) {
 export function SettingsSignInMethodsCard() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false)
-  // Dialog state
   const [dialogMode, setDialogMode] = React.useState<"set" | "change">("set")
   const [currentPassword, setCurrentPassword] = React.useState("")
   const [newPassword, setNewPassword] = React.useState("")
+  const [confirmPassword, setConfirmPassword] = React.useState("")
   const [isSettingPassword, setIsSettingPassword] = React.useState(false)
   const defaultProviders: Provider[] = [
     {
@@ -240,6 +240,14 @@ export function SettingsSignInMethodsCard() {
       toast.error("Password must be at least 8 characters")
       return
     }
+    if (!confirmPassword) {
+      toast.error("Please confirm your password")
+      return
+    }
+    if (newPassword.trim() !== confirmPassword.trim()) {
+      toast.error("Passwords do not match")
+      return
+    }
     setIsSettingPassword(true)
     try {
       // Server action: sets credential password and links Email/Password
@@ -251,6 +259,7 @@ export function SettingsSignInMethodsCard() {
       )
       setCurrentPassword("")
       setNewPassword("")
+      setConfirmPassword("")
     } catch (err: any) {
       toast.error(err?.message || "Failed to set password")
     } finally {
@@ -268,6 +277,14 @@ export function SettingsSignInMethodsCard() {
       toast.error("New password must be at least 8 characters")
       return
     }
+    if (!confirmPassword) {
+      toast.error("Please confirm your new password")
+      return
+    }
+    if (newPassword.trim() !== confirmPassword.trim()) {
+      toast.error("New passwords do not match")
+      return
+    }
     setIsSettingPassword(true)
     try {
       const { error } = await authClient.changePassword({
@@ -280,6 +297,7 @@ export function SettingsSignInMethodsCard() {
       toast.success("Password updated")
       setCurrentPassword("")
       setNewPassword("")
+      setConfirmPassword("")
       await loadLinkedProviders()
     } catch (err: any) {
       toast.error(err?.message || "Failed to change password")
@@ -449,6 +467,7 @@ export function SettingsSignInMethodsCard() {
           if (!open) {
             setCurrentPassword("")
             setNewPassword("")
+            setConfirmPassword("")
           }
         }}
       >
@@ -493,15 +512,41 @@ export function SettingsSignInMethodsCard() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 disabled={isSettingPassword}
-                autoComplete={
-                  dialogMode === "set" ? "new-password" : "new-password"
-                }
+                autoComplete="new-password"
               />
               <p className="text-xs text-muted-foreground">
                 Minimum 8 characters. Use a mix of letters, numbers, and
                 symbols.
               </p>
             </div>
+            {dialogMode === "change" ? (
+              <div className="space-y-2">
+                <Label htmlFor="settings-confirm">Confirm new password</Label>
+                <Input
+                  id="settings-confirm"
+                  type="password"
+                  placeholder="Re-enter your new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isSettingPassword}
+                  autoComplete="new-password"
+                />
+              </div>
+            ) : null}
+            {dialogMode === "set" ? (
+              <div className="space-y-2">
+                <Label htmlFor="settings-confirm">Confirm password</Label>
+                <Input
+                  id="settings-confirm"
+                  type="password"
+                  placeholder="Re-enter your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isSettingPassword}
+                  autoComplete="new-password"
+                />
+              </div>
+            ) : null}
           </div>
           <DialogFooter>
             <Button
