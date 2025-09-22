@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { CircleCheck, CircleX } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
+import { toast } from "sonner"
 
 /**
  * SettingsAvatarCard
@@ -75,14 +76,14 @@ export function SettingsAvatarCard() {
         body: formData,
       })
       if (res.ok) {
-        await refetch()
+        refetch()
         setOpen(false)
       } else {
-        // Handle error, perhaps show toast
-        console.error("Upload failed")
+        throw new Error("Upload failed")
       }
     } catch (error) {
-      console.error("Upload error", error)
+      toast.error("Failed to upload avatar")
+      console.error("Avatar upload error", error)
     } finally {
       setIsUploading(false)
     }

@@ -33,7 +33,11 @@ export async function POST(request: Request) {
 
   // Delete old image from Vercel Blob if it exists and is from Vercel Blob
   if (session.user.image && session.user.image.includes("vercel-storage.com")) {
-    await del(session.user.image, { token: vercelBlobToken })
+    try {
+      await del(session.user.image, { token: vercelBlobToken })
+    } catch (error) {
+      console.error("Failed to delete old image", error)
+    }
   }
 
   return Response.json({ url: blob.url })
