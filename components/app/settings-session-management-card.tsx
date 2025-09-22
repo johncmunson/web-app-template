@@ -200,10 +200,7 @@ export function SettingsSessionManagementCard() {
             const os = capitalize(rawOS)
             const browser = capitalize(rawBrowser)
             const DeviceIcon = getDeviceIcon(device)
-            const loading =
-              Boolean(rowLoading[token]) ||
-              revokeAllLoading ||
-              revokeOthersLoading
+            const loading = Boolean(rowLoading[token])
 
             return (
               <div
@@ -284,12 +281,8 @@ export function SettingsSessionManagementCard() {
             type="button"
             variant="outline"
             size="sm"
-            className={cn(
-              isRefreshing || revokeAllLoading || revokeOthersLoading
-                ? ""
-                : "cursor-pointer",
-            )}
-            disabled={isRefreshing || revokeAllLoading || revokeOthersLoading}
+            className={cn(isRefreshing ? "" : "cursor-pointer")}
+            disabled={isRefreshing || isLoading}
             onClick={refresh}
           >
             {isRefreshing && <Loader2 className="mr-2 size-4 animate-spin" />}
@@ -298,12 +291,9 @@ export function SettingsSessionManagementCard() {
           <Button
             type="button"
             size="sm"
-            className={cn(
-              revokeOthersLoading || revokeAllLoading ? "" : "cursor-pointer",
-            )}
+            className={cn(revokeOthersLoading ? "" : "cursor-pointer")}
             disabled={
               revokeOthersLoading ||
-              revokeAllLoading ||
               isRefreshing ||
               isLoading ||
               (sessions ? sessions.length < 2 : true)
