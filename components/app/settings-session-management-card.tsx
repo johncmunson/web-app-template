@@ -165,9 +165,7 @@ export function SettingsSessionManagementCard() {
             const lastActive = s.updatedAt
             const expires = s.expiresAt
             const ip = s.ipAddress || "—"
-            const { os, browser, deviceType } = parseUserAgent(
-              s.userAgent || "",
-            )
+            const { os, browser, device } = parseUserAgent(s.userAgent || "")
             const loading =
               Boolean(rowLoading[token]) ||
               revokeAllLoading ||
@@ -188,7 +186,7 @@ export function SettingsSessionManagementCard() {
                 <div className="space-y-1.5 min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="font-medium truncate">
-                      {`${browser} on ${os} (${deviceType})`}
+                      {`${browser} on ${os} (${device})`}
                     </div>
                     {isCurrent ? (
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-primary uppercase tracking-wide">
@@ -308,52 +306,203 @@ export function SettingsSessionManagementCard() {
   )
 }
 
-// Basic user-agent parser to extract OS, browser, and device type
-// A more robust solution would involve using a library like "ua-parser-js"
+// Basic user-agent parser to extract OS, browser, and device type. Just focuses
+// on the most common cases and attempts to avoid overfitting and false positives.
+// A more robust solution would involve using a library like "ua-parser-js".
 // https://github.com/faisalman/ua-parser-js
-function parseUserAgent(ua: string): {
-  os: string
-  browser: string
-  deviceType: string
-} {
-  let os = "Unknown"
-  let browser = "Unknown"
-  let deviceType: "desktop" | "mobile" | "tablet" | "unknown" = "unknown"
+type UserAgentMetadata = {
+  os: OS
+  browser: Browser
+  device: Device
+}
 
-  // --- OS detection ---
-  if (/Windows NT 10.0/.test(ua)) {
-    os = "Windows 10"
-  } else if (/Windows NT 11.0/.test(ua)) {
-    os = "Windows 11"
-  } else if (/Mac OS X/.test(ua)) {
-    os = "macOS"
-  } else if (/Android/.test(ua)) {
-    os = "Android"
-  } else if (/iPhone|iPad|iPod/.test(ua)) {
-    os = "iOS"
-  } else if (/Linux/.test(ua)) {
-    os = "Linux"
+function parseUserAgent(uaRaw: string | null | undefined): UserAgentMetadata {
+  return {
+    os: detectOS(uaRaw),
+    browser: detectBrowser(uaRaw),
+    device: detectDeviceType(uaRaw),
+  }
+}
+
+type Device = "desktop" | "mobile" | "tablet" | "other"
+
+function detectDeviceType(uaRaw: string | null | undefined): Device {
+  if (!uaRaw) return "other"
+  const ua = uaRaw.toLowerCase()
+
+  // --- Special cases first ---------------------------------------------------
+
+  // iPadOS 13+ can present a desktop-like UA (contains "Macintosh" + "Mobile")
+  // Example: "Macintosh; Intel Mac OS X ... Mobile/15E148 Safari/..."
+  if (ua.includes("macintosh") && ua.includes("mobile")) {
+    return "tablet"
   }
 
-  // --- Browser detection ---
-  if (/Edg\//.test(ua)) {
-    browser = "Edge"
-  } else if (/Chrome\//.test(ua)) {
-    browser = "Chrome"
-  } else if (/Safari\//.test(ua) && /Version\//.test(ua)) {
-    browser = "Safari"
-  } else if (/Firefox\//.test(ua)) {
-    browser = "Firefox"
+  // --- Tablet checks (most common) -------------------------------------------
+  if (
+    ua.includes("ipad") ||
+    (ua.includes("android") && !ua.includes("mobile")) || // many Android tablets omit "Mobile"
+    ua.includes("tablet") ||
+    ua.includes("kindle") ||
+    ua.includes("silk") || // Amazon Silk (Fire tablets)
+    ua.includes("playbook") ||
+    ua.includes("fire hd") ||
+    /sm-t\d+/i.test(uaRaw) || // Samsung Galaxy Tab models (e.g., SM-T870)
+    /\bnexus (7|9|10)\b/.test(ua) // Nexus tablets
+  ) {
+    return "tablet"
   }
 
-  // --- Device type detection ---
-  if (/Mobi|Android/.test(ua)) {
-    deviceType = "mobile"
-  } else if (/iPad|Tablet/.test(ua)) {
-    deviceType = "tablet"
-  } else if (os !== "Unknown") {
-    deviceType = "desktop"
+  // --- Mobile checks (most common) -------------------------------------------
+  if (
+    ua.includes("iphone") ||
+    ua.includes("ipod") ||
+    (ua.includes("android") && ua.includes("mobile")) ||
+    ua.includes("windows phone") ||
+    ua.includes("bb10") ||
+    ua.includes("blackberry") ||
+    ua.includes("opera mini") ||
+    // Generic "mobile" token as a last mobile heuristic (placed after iPad check above)
+    /\bmobile\b/.test(ua)
+  ) {
+    return "mobile"
   }
 
-  return { os, browser, deviceType }
+  // --- Desktop checks ---------------------------------------------------------
+  if (
+    ua.includes("windows nt") ||
+    (ua.includes("macintosh") && !ua.includes("mobile")) || // regular macOS
+    ua.includes("cros") || // ChromeOS
+    ua.includes("x11") || // many Linux distros
+    (ua.includes("linux") && !ua.includes("android")) // exclude Android
+  ) {
+    return "desktop"
+  }
+
+  // --- Fallback ---------------------------------------------------------------
+  return "other"
+}
+
+type Browser =
+  | "chrome"
+  | "safari"
+  | "firefox"
+  | "edge"
+  | "opera"
+  | "samsung_internet"
+  | "ie"
+  | "other"
+
+function detectBrowser(uaRaw: string | null | undefined): Browser {
+  if (!uaRaw) return "other"
+  const ua = uaRaw.toLowerCase()
+
+  // ---- Order matters: identify distinctive tokens first ---------------------
+
+  // Microsoft Edge (Chromium uses "Edg/", Legacy used "Edge/")
+  if (ua.includes("edg/") || ua.includes("edge/")) {
+    return "edge"
+  }
+
+  // Samsung Internet (Android)
+  if (ua.includes("samsungbrowser")) {
+    return "samsung_internet"
+  }
+
+  // Opera (Chromium-based uses "OPR/"; legacy can have "Opera")
+  if (ua.includes("opr/") || ua.includes("opera")) {
+    return "opera"
+  }
+
+  // Firefox (desktop/mobile) + iOS wrapper ("FxiOS")
+  if (ua.includes("firefox/") || ua.includes("fxios")) {
+    return "firefox"
+  }
+
+  // Chrome family (desktop/mobile) + iOS wrapper ("CriOS") + Chromium
+  // Exclude brands that piggyback on the Chrome token (Edge/Opera/Samsung).
+  if (
+    (ua.includes("chrome/") ||
+      ua.includes("crios") ||
+      ua.includes("chromium")) &&
+    !ua.includes("edg/") &&
+    !ua.includes("edge/") &&
+    !ua.includes("opr/") &&
+    !ua.includes("samsungbrowser")
+  ) {
+    return "chrome"
+  }
+
+  // Safari (WebKit). On iOS all browsers use WebKit and often include "Safari",
+  // so require "Version/" and exclude other Chromium/Firefox tokens.
+  if (
+    ua.includes("safari") &&
+    ua.includes("version/") &&
+    !ua.includes("chrome/") &&
+    !ua.includes("crios") &&
+    !ua.includes("chromium") &&
+    !ua.includes("edg/") &&
+    !ua.includes("edge/") &&
+    !ua.includes("opr/") &&
+    !ua.includes("fxios")
+  ) {
+    return "safari"
+  }
+
+  // Internet Explorer (rare but still seen in enterprise)
+  if (ua.includes("msie ") || (ua.includes("trident/") && ua.includes("rv:"))) {
+    return "ie"
+  }
+
+  // Fallback for lesser-used or ambiguous UAs (Brave, Vivaldi, UC, bots, etc.)
+  return "other"
+}
+
+type OS =
+  | "windows"
+  | "macos"
+  | "ios"
+  | "android"
+  | "linux"
+  | "chromeos"
+  | "other"
+
+function detectOS(uaRaw: string | null | undefined): OS {
+  if (!uaRaw) return "other"
+  const ua = uaRaw.toLowerCase()
+
+  // --- iOS / iPadOS (note: iPadOS 13+ can masquerade as "Macintosh" + "Mobile")
+  if (
+    /\b(iphone|ipad|ipod)\b/.test(ua) ||
+    (ua.includes("macintosh") && ua.includes("mobile"))
+  ) {
+    return "ios"
+  }
+
+  // --- Android (covers phones & tablets)
+  if (ua.includes("android")) {
+    return "android"
+  }
+
+  // --- ChromeOS (often includes "X11; CrOS")
+  if (ua.includes("cros")) {
+    return "chromeos"
+  }
+
+  // --- Windows (desktop + legacy Windows Phone)
+  if (ua.includes("windows")) {
+    return "windows"
+  }
+
+  // --- macOS (standard desktop macOS; iPadOS spoof handled above)
+  if (ua.includes("macintosh") || ua.includes("mac os x")) {
+    return "macos"
+  }
+
+  // --- Linux (exclude Android which also contains "linux")
+  if ((ua.includes("linux") && !ua.includes("android")) || ua.includes("x11")) {
+    return "linux"
+  }
+
+  return "other"
 }
