@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth-client"
+import { cn } from "@/lib/utils"
 import { CircleCheck, CircleX, Loader2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
@@ -42,6 +43,7 @@ export function SettingsAvatarCard() {
   const [initialsDraft, setInitialsDraft] = React.useState("")
   const [isUploading, setIsUploading] = React.useState(false)
   const [isSettingInitials, setIsSettingInitials] = React.useState(false)
+  const [isDragOver, setIsDragOver] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const avatarSrc = session?.user.image || null
@@ -94,6 +96,46 @@ export function SettingsAvatarCard() {
     }
   }
 
+  async function handleDrop(e: React.DragEvent<HTMLButtonElement>) {
+    e.preventDefault()
+    setIsDragOver(false)
+    const files = e.dataTransfer.files
+    if (files.length > 0) {
+      const file = files[0]
+      if (file.type.startsWith("image/")) {
+        setIsUploading(true)
+        try {
+          const formData = new FormData()
+          formData.append("file", file)
+          const res = await fetch("/api/upload-avatar", {
+            method: "POST",
+            body: formData,
+          })
+          if (res.ok) {
+            refetch()
+          } else {
+            throw new Error("Upload failed")
+          }
+        } catch (error) {
+          toast.error("Failed to upload avatar")
+          console.error("Avatar upload error", error)
+        } finally {
+          setIsUploading(false)
+        }
+      }
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    setIsDragOver(false)
+  }
+
   async function confirmInitials() {
     if (initialsDraft.length === 2) {
       setIsSettingInitials(true)
@@ -126,14 +168,26 @@ export function SettingsAvatarCard() {
           <p>This is your avatar.</p>
           <p>
             Click the avatar to upload an image, use a linked account, or set
-            initials.
+            initials. You can also drag and drop an image directly onto the
+            avatar.
           </p>
         </CardDescription>
         <CardAction>
           <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
-              <button type="button" aria-label="Open avatar actions">
-                <Avatar className="size-18 cursor-pointer">
+              <button
+                type="button"
+                aria-label="Open avatar actions"
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+              >
+                <Avatar
+                  className={cn(
+                    "size-18 cursor-pointer outline-2 outline-dashed outline-gray-300 outline-offset-2",
+                    isDragOver ? "outline-gray-500" : "",
+                  )}
+                >
                   {avatarSrc ? (
                     <AvatarImage src={avatarSrc} alt="User avatar" />
                   ) : null}
