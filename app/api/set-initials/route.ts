@@ -4,6 +4,10 @@ import { headers } from "next/headers"
 import { getEnvVar } from "@/lib/utils"
 import { after } from "next/server"
 
+// This could be refactored to be a React server function instead,
+// but then we wouldn't be able to use the `after` function from
+// `next/server` to do the cleanup after the response is sent.
+
 const vercelBlobToken = getEnvVar("VERCEL_BLOB_READ_WRITE_TOKEN")
 
 export async function POST(request: Request) {
