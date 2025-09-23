@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AuthCard } from "@/components/app/auth-card"
+import { Avatar, AvatarImage } from "@/components/ui/avatar"
 import { useAuthHelpers } from "@/hooks/use-auth-helpers"
 import { cn } from "@/lib/utils"
-import Image from "next/image"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { X } from "lucide-react"
 
 export default function SignUp() {
@@ -16,12 +16,15 @@ export default function SignUp() {
     signUpFields,
     signUpStaticFields,
     setSignUpFields,
+    setImage,
     onSignUpEmailSubmit,
     onSignInSocialClick,
   } = useAuthHelpers()
 
-  const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -32,6 +35,36 @@ export default function SignUp() {
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    const files = e.dataTransfer.files
+    if (files.length > 0) {
+      const file = files[0]
+      if (file.type.startsWith("image/")) {
+        setImage(file)
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImagePreview(reader.result as string)
+        }
+        reader.readAsDataURL(file)
+        if (fileInputRef.current) {
+          fileInputRef.current.files = files
+        }
+      }
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setIsDragOver(false)
   }
 
   return (
@@ -116,24 +149,30 @@ export default function SignUp() {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="image">Profile Image (optional)</Label>
-        <div className="flex items-end gap-4">
+        <div
+          className={cn(
+            "flex items-center gap-4 border-2 border-dashed rounded-md p-3 transition-colors",
+            isDragOver
+              ? "border-primary bg-primary/10"
+              : "border-muted-foreground/25",
+          )}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+        >
           {imagePreview && (
-            <div className="relative w-16 h-16 rounded-sm overflow-hidden">
-              <Image
-                src={imagePreview}
-                alt="Profile preview"
-                layout="fill"
-                objectFit="cover"
-              />
-            </div>
+            <Avatar className="size-14">
+              <AvatarImage src={imagePreview} alt="User avatar" />
+            </Avatar>
           )}
           <div className="flex items-center gap-2 w-full">
             <Input
+              ref={fileInputRef}
               id="image"
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full"
+              className="w-full cursor-pointer"
             />
             {imagePreview && (
               <X
@@ -141,6 +180,9 @@ export default function SignUp() {
                 onClick={() => {
                   setImage(null)
                   setImagePreview(null)
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = ""
+                  }
                 }}
               />
             )}
@@ -149,7 +191,7 @@ export default function SignUp() {
       </div>
       <Button
         type="submit"
-        className={cn("w-full", loading ? "" : "cursor-pointer")}
+        className={cn("w-full mt-2", loading ? "" : "cursor-pointer")}
         disabled={loading}
       >
         Create an account

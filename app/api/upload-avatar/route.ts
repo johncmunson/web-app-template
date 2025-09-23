@@ -27,8 +27,9 @@ export async function POST(request: Request) {
   }
 
   // Upload to Vercel Blob
-  const blob = await put(file.name, file, {
+  const blob = await put("avatar", file, {
     access: "public",
+    addRandomSuffix: true,
     token: vercelBlobToken,
   })
 

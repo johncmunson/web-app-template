@@ -9,15 +9,7 @@ import {
 } from "better-auth/react"
 import { authClient } from "@/lib/auth-client"
 import { useRouter, useSearchParams } from "next/navigation"
-
-// async function convertImageToBase64(file: File): Promise<string> {
-//   return new Promise((resolve, reject) => {
-//     const reader = new FileReader()
-//     reader.onloadend = () => resolve(reader.result as string)
-//     reader.onerror = reject
-//     reader.readAsDataURL(file)
-//   })
-// }
+import { uploadAvatarImage } from "@/app/actions/avatar-sign-up"
 
 export function useAuthHelpers() {
   const router = useRouter()
@@ -45,15 +37,10 @@ export function useAuthHelpers() {
     email: "",
     password: "",
     passwordConfirmation: "",
-    // TODO: This field is not currently being used. However, there is commented out boilerplate
-    // code in this file and in sign-up.tsx for allowing the user to set a profile image on sign
-    // up with email/password. Please note that the Base64 strategy used in the commented out code
-    // is likely not compatible with the better-auth session/cookie cache that we are using b/c the
-    // encoded image string is too large to fit in the cookie. A different approach would be needed.
-    // For social sign in, the profile image URL is saved on the account automatically by better-auth.
-    image: "", // image ? await convertImageToBase64(image) : "",
+    image: "",
     callbackURL,
   })
+  const [image, setImage] = useState<File | null>(null)
   const signUpStaticFields = {
     title: "Sign Up",
     description: "Enter your information to create an account",
@@ -115,9 +102,24 @@ export function useAuthHelpers() {
       return
     }
 
+    // Handle image upload if present
+    let imageUrl = ""
+    if (image) {
+      try {
+        const formData = new FormData()
+        formData.append("image", image)
+        const result = await uploadAvatarImage(formData)
+        imageUrl = result.url
+      } catch (error) {
+        toast.error("Failed to upload image")
+        return
+      }
+    }
+
     await authClient.signUp.email(
       {
         ...signUpFields,
+        image: imageUrl,
         name: `${signUpFields.firstName} ${signUpFields.lastName}`,
       },
       {
@@ -148,6 +150,8 @@ export function useAuthHelpers() {
     signUpStaticFields,
     setSignInFields,
     setSignUpFields,
+    image,
+    setImage,
     onSignInEmailSubmit,
     onSignUpEmailSubmit,
     onSignInSocialClick,
