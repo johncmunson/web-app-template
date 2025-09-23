@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label"
 import { AuthCard } from "@/components/app/auth-card"
 import { useAuthHelpers } from "@/hooks/use-auth-helpers"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
+import { useState } from "react"
+import { X } from "lucide-react"
 
 export default function SignUp() {
   const {
@@ -17,20 +20,19 @@ export default function SignUp() {
     onSignInSocialClick,
   } = useAuthHelpers()
 
-  // import Image from "next/image"
-  // const [image, setImage] = useState<File | null>(null)
-  // const [imagePreview, setImagePreview] = useState<string | null>(null)
-  // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0]
-  //   if (file) {
-  //     setImage(file)
-  //     const reader = new FileReader()
-  //     reader.onloadend = () => {
-  //       setImagePreview(reader.result as string)
-  //     }
-  //     reader.readAsDataURL(file)
-  //   }
-  // }
+  const [image, setImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImage(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   return (
     <AuthCard
@@ -112,7 +114,7 @@ export default function SignUp() {
           disabled={loading}
         />
       </div>
-      {/* <div className="grid gap-2">
+      <div className="grid gap-2">
         <Label htmlFor="image">Profile Image (optional)</Label>
         <div className="flex items-end gap-4">
           {imagePreview && (
@@ -144,7 +146,7 @@ export default function SignUp() {
             )}
           </div>
         </div>
-      </div> */}
+      </div>
       <Button
         type="submit"
         className={cn("w-full", loading ? "" : "cursor-pointer")}
