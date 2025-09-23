@@ -1,6 +1,7 @@
 "use client"
 
-import * as React from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -9,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,8 +19,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { CircleCheck, CircleX, Loader2 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
+import { CircleCheck, CircleX, Loader2 } from "lucide-react"
+import * as React from "react"
 import { toast } from "sonner"
 
 /**
@@ -40,17 +41,21 @@ export function SettingsAvatarCard() {
   >("root")
   const [initialsDraft, setInitialsDraft] = React.useState("")
   const [isUploading, setIsUploading] = React.useState(false)
+  const [isSettingInitials, setIsSettingInitials] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const avatarSrc = session?.user.image || null
-  const initials = session?.user.name
-    ? session.user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : ""
+  const initials =
+    avatarSrc?.length === 2
+      ? avatarSrc
+      : session?.user.name
+        ? session.user.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2)
+        : ""
 
   // Reset state when menu closes
   React.useEffect(() => {
@@ -89,10 +94,27 @@ export function SettingsAvatarCard() {
     }
   }
 
-  function confirmInitials() {
+  async function confirmInitials() {
     if (initialsDraft.length === 2) {
-      // For now, just close, as initials are computed from name
-      setOpen(false)
+      setIsSettingInitials(true)
+      try {
+        const res = await fetch("/api/set-initials", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ initials: initialsDraft }),
+        })
+        if (res.ok) {
+          refetch()
+          setOpen(false)
+        } else {
+          throw new Error("Failed to set initials")
+        }
+      } catch (error) {
+        toast.error("Failed to set initials")
+        console.error("Set initials error", error)
+      } finally {
+        setIsSettingInitials(false)
+      }
     }
   }
 
@@ -159,6 +181,7 @@ export function SettingsAvatarCard() {
                   }
                   onCancel={() => setMenuMode("root")}
                   onConfirm={confirmInitials}
+                  isSettingInitials={isSettingInitials}
                 />
               )}
             </DropdownMenuContent>
@@ -264,11 +287,13 @@ function InitialsMenu({
   setInitialsDraft,
   onCancel,
   onConfirm,
+  isSettingInitials,
 }: {
   initialsDraft: string
   setInitialsDraft: (v: string) => void
   onCancel: () => void
-  onConfirm: () => void
+  onConfirm: () => Promise<void>
+  isSettingInitials: boolean
 }) {
   const valid = initialsDraft.length === 2
   return (
@@ -285,7 +310,13 @@ function InitialsMenu({
         Enter initials
       </DropdownMenuLabel>
       <DropdownMenuSeparator />
-      <div className="flex items-center gap-2 px-2 py-1.5">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (valid && !isSettingInitials) onConfirm()
+        }}
+        className="flex items-center gap-2 p-2 pt-3"
+      >
         <Input
           aria-label="Initials"
           value={initialsDraft}
@@ -293,26 +324,32 @@ function InitialsMenu({
           placeholder="AB"
           inputMode="text"
           maxLength={2}
-          className="h-8 w-24 text-center uppercase"
+          className="h-8 w-24 text-center uppercase rounded-lg"
         />
-        <button
-          type="button"
-          className={`rounded-md p-1 hover:bg-accent transition ${valid ? "opacity-100" : "opacity-50 cursor-not-allowed"}`}
-          onClick={valid ? onConfirm : undefined}
+        <Button
+          size="sm"
+          type="submit"
+          className="rounded-lg cursor-pointer"
           aria-label="Confirm initials"
-          aria-disabled={!valid}
+          aria-disabled={!valid || isSettingInitials}
+          disabled={!valid || isSettingInitials}
         >
-          <CircleCheck className="size-5" />
-        </button>
-        <button
+          {isSettingInitials ? (
+            <Loader2 className="size-5 animate-spin" />
+          ) : (
+            <CircleCheck className="size-5" />
+          )}
+        </Button>
+        <Button
+          size="sm"
           type="button"
-          className="rounded-md p-1 hover:bg-accent"
+          className="rounded-lg cursor-pointer"
           onClick={onCancel}
           aria-label="Cancel"
         >
           <CircleX className="size-5" />
-        </button>
-      </div>
+        </Button>
+      </form>
     </div>
   )
 }
