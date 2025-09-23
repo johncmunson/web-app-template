@@ -67,13 +67,7 @@ export function SettingsAvatarCard() {
     }
   }, [open])
 
-  function handlePickFile() {
-    fileInputRef.current?.click()
-  }
-
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+  async function uploadAvatar(file: File): Promise<boolean> {
     setIsUploading(true)
     try {
       const formData = new FormData()
@@ -84,15 +78,28 @@ export function SettingsAvatarCard() {
       })
       if (res.ok) {
         refetch()
-        setOpen(false)
+        return true
       } else {
         throw new Error("Upload failed")
       }
     } catch (error) {
       toast.error("Failed to upload avatar")
       console.error("Avatar upload error", error)
+      return false
     } finally {
       setIsUploading(false)
+    }
+  }
+
+  function handlePickFile() {
+    fileInputRef.current?.click()
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (await uploadAvatar(file)) {
+      setOpen(false)
     }
   }
 
@@ -103,25 +110,7 @@ export function SettingsAvatarCard() {
     if (files.length > 0) {
       const file = files[0]
       if (file.type.startsWith("image/")) {
-        setIsUploading(true)
-        try {
-          const formData = new FormData()
-          formData.append("file", file)
-          const res = await fetch("/api/upload-avatar", {
-            method: "POST",
-            body: formData,
-          })
-          if (res.ok) {
-            refetch()
-          } else {
-            throw new Error("Upload failed")
-          }
-        } catch (error) {
-          toast.error("Failed to upload avatar")
-          console.error("Avatar upload error", error)
-        } finally {
-          setIsUploading(false)
-        }
+        await uploadAvatar(file)
       }
     }
   }
@@ -181,13 +170,12 @@ export function SettingsAvatarCard() {
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
+                className={cn(
+                  "cursor-pointer rounded-full outline-2 outline-dashed outline-gray-300 hover:outline-gray-500 outline-offset-2 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2",
+                  isDragOver && "outline-gray-500",
+                )}
               >
-                <Avatar
-                  className={cn(
-                    "size-18 cursor-pointer outline-2 outline-dashed outline-gray-300 outline-offset-2",
-                    isDragOver ? "outline-gray-500" : "",
-                  )}
-                >
+                <Avatar className="size-18">
                   {avatarSrc ? (
                     <AvatarImage src={avatarSrc} alt="User avatar" />
                   ) : null}
