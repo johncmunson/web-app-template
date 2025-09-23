@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     headers: await headers(),
   })
 
+  // Defer cleanup until after response is sent
   after(async () => {
     // Delete old image from Vercel Blob if it exists and is from Vercel Blob
     if (
