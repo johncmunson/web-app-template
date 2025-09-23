@@ -157,8 +157,7 @@ export function SettingsAvatarCard() {
           <p>This is your avatar.</p>
           <p>
             Click the avatar to upload an image, use a linked account, or set
-            initials. You can also drag and drop an image directly onto the
-            avatar.
+            initials. Drag-and-drop is also supported.
           </p>
         </CardDescription>
         <CardAction>
