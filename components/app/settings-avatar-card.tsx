@@ -50,7 +50,7 @@ export function SettingsAvatarCard() {
         .join("")
         .toUpperCase()
         .slice(0, 2)
-    : "CN"
+    : ""
 
   // Reset state when menu closes
   React.useEffect(() => {
