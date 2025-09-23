@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { CircleCheck, CircleX } from "lucide-react"
+import { CircleCheck, CircleX, Loader2 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
 
@@ -134,6 +134,7 @@ export function SettingsAvatarCard() {
                     e.preventDefault() // keep menu open while swapping content
                     setMenuMode("initials")
                   }}
+                  isUploading={isUploading}
                 />
               )}
 
@@ -186,17 +187,24 @@ function RootMenu({
   onUpload,
   onUseLinked,
   onTypeInitials,
+  isUploading,
 }: {
   onUpload: () => void
   onUseLinked: (e: Event) => void
   onTypeInitials: (e: Event) => void
+  isUploading: boolean
 }) {
   return (
     <div>
       <DropdownMenuLabel>Change avatar</DropdownMenuLabel>
       <DropdownMenuSeparator />
-      <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={onUpload}>
+      <DropdownMenuItem
+        onSelect={(e) => e.preventDefault()}
+        onClick={onUpload}
+        disabled={isUploading}
+      >
         Upload image
+        {isUploading && <Loader2 className="mr-2 size-4 animate-spin" />}
       </DropdownMenuItem>
       <DropdownMenuItem onSelect={onUseLinked}>
         Use linked account
