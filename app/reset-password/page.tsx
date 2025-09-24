@@ -27,6 +27,8 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("")
   const [pending, setPending] = useState(false)
 
+  const isDisabled = pending || !password.trim() || !confirm.trim()
+
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (pending) return
@@ -38,14 +40,14 @@ export default function ResetPasswordPage() {
       toast.error("Please enter a new password")
       return
     }
-    if (password !== confirm) {
+    if (password.trim() !== confirm.trim()) {
       toast.error("Passwords do not match")
       return
     }
     try {
       setPending(true)
       const { error } = await authClient.resetPassword({
-        newPassword: password,
+        newPassword: password.trim(),
         token,
       })
       if (error) {
@@ -117,7 +119,7 @@ export default function ResetPasswordPage() {
           <form
             className="grid gap-4"
             onSubmit={onSubmit}
-            aria-disabled={pending}
+            aria-disabled={isDisabled}
           >
             <div className="grid gap-2">
               <Label htmlFor="password">New password</Label>
@@ -141,7 +143,12 @@ export default function ResetPasswordPage() {
                 disabled={pending}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={pending}>
+            <Button
+              type="submit"
+              className="w-full cursor-pointer"
+              aria-disabled={isDisabled}
+              disabled={isDisabled}
+            >
               {pending ? "Resetting..." : "Reset password"}
             </Button>
           </form>

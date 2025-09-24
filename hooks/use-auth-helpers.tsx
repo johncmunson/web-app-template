@@ -57,17 +57,35 @@ export function useAuthHelpers() {
     )
   }
 
-  const validateSignUp = () => {
+  const validateSignUpFieldsNotEmpty = () => {
     return (
       signUpFields.firstName.trim() !== "" &&
       signUpFields.lastName.trim() !== "" &&
       signUpFields.email.trim() !== "" &&
-      signUpFields.password.trim() !== ""
+      signUpFields.password.trim() !== "" &&
+      signUpFields.passwordConfirmation.trim() !== ""
     )
   }
 
   const validateSignUpPasswordsMatch = () => {
-    return signUpFields.password === signUpFields.passwordConfirmation
+    return (
+      signUpFields.password.trim() === signUpFields.passwordConfirmation.trim()
+    )
+  }
+
+  const validateFirstAndLastNameLength = () => {
+    return (
+      `${signUpFields.firstName.trim()} ${signUpFields.lastName.trim()}`
+        .length <= 32
+    )
+  }
+
+  const validateSignUp = () => {
+    return (
+      validateSignUpFieldsNotEmpty() &&
+      validateSignUpPasswordsMatch() &&
+      validateFirstAndLastNameLength()
+    )
   }
 
   const hooks = {
@@ -93,12 +111,16 @@ export function useAuthHelpers() {
   const onSignUpEmailSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (loading) return
-    if (!validateSignUp()) {
+    if (!validateSignUpFieldsNotEmpty()) {
       toast.error("Please fill in all fields")
       return
     }
     if (!validateSignUpPasswordsMatch()) {
       toast.error("Passwords do not match")
+      return
+    }
+    if (!validateFirstAndLastNameLength()) {
+      toast.error("First and last name must be 32 characters or less")
       return
     }
 
@@ -144,13 +166,16 @@ export function useAuthHelpers() {
 
   return {
     loading,
+    image,
     signInFields,
     signInStaticFields,
     signUpFields,
     signUpStaticFields,
     setSignInFields,
     setSignUpFields,
-    image,
+    validateSignUp,
+    validateFirstAndLastNameLength,
+    validateSignIn,
     setImage,
     onSignInEmailSubmit,
     onSignUpEmailSubmit,

@@ -17,6 +17,7 @@ export default function SignIn() {
     setSignInFields,
     onSignInEmailSubmit,
     onSignInSocialClick,
+    validateSignIn,
   } = useAuthHelpers()
 
   return (
@@ -89,9 +90,8 @@ export default function SignIn() {
 
       <Button
         type="submit"
-        // className="w-full cursor-pointer"
         className={cn("w-full", loading ? "" : "cursor-pointer")}
-        disabled={loading}
+        disabled={loading || !validateSignIn()}
       >
         <p>Login</p>
       </Button>

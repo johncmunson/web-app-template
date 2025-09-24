@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
       const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ""
       const url = new URL(`${basePath}/reset-password`, window.location.origin)
       await authClient.requestPasswordReset({
-        email,
+        email: email.trim(),
         redirectTo: url.toString(),
       })
     } catch (err) {
@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
           <form
             className="grid gap-4"
             onSubmit={onSubmit}
-            aria-disabled={pending}
+            aria-disabled={pending || submitted || !email.trim()}
           >
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
@@ -73,8 +73,9 @@ export default function ForgotPasswordPage() {
             </div>
             <Button
               type="submit"
-              className="w-full"
-              disabled={pending || submitted}
+              className="w-full cursor-pointer"
+              aria-disabled={pending || submitted || !email.trim()}
+              disabled={pending || submitted || !email.trim()}
             >
               {pending ? "Sending..." : "Send reset link"}
             </Button>

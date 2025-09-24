@@ -19,6 +19,8 @@ export default function SignUp() {
     setImage,
     onSignUpEmailSubmit,
     onSignInSocialClick,
+    validateSignUp,
+    validateFirstAndLastNameLength,
   } = useAuthHelpers()
 
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -85,7 +87,10 @@ export default function SignUp() {
           <Input
             id="first-name"
             onChange={(e) => {
-              setSignUpFields({ ...signUpFields, firstName: e.target.value })
+              setSignUpFields({
+                ...signUpFields,
+                firstName: e.target.value,
+              })
             }}
             value={signUpFields.firstName}
             autoComplete="given-name"
@@ -97,13 +102,25 @@ export default function SignUp() {
           <Input
             id="last-name"
             onChange={(e) => {
-              setSignUpFields({ ...signUpFields, lastName: e.target.value })
+              setSignUpFields({
+                ...signUpFields,
+                lastName: e.target.value,
+              })
             }}
             value={signUpFields.lastName}
             autoComplete="family-name"
             disabled={loading}
           />
         </div>
+        {!validateFirstAndLastNameLength() && (
+          <p
+            id="name-error"
+            role="alert"
+            className="col-span-2 text-destructive text-xs -mt-4"
+          >
+            First + Last name must be 32 characters or less.
+          </p>
+        )}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="email">Email</Label>
@@ -124,7 +141,10 @@ export default function SignUp() {
           id="password"
           type="password"
           onChange={(e) => {
-            setSignUpFields({ ...signUpFields, password: e.target.value })
+            setSignUpFields({
+              ...signUpFields,
+              password: e.target.value,
+            })
           }}
           value={signUpFields.password}
           autoComplete="new-password"
@@ -192,7 +212,7 @@ export default function SignUp() {
       <Button
         type="submit"
         className={cn("w-full mt-2", loading ? "" : "cursor-pointer")}
-        disabled={loading}
+        disabled={loading || !validateSignUp()}
       >
         Create an account
       </Button>
