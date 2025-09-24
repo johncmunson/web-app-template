@@ -125,23 +125,28 @@ export function useAuthHelpers() {
     }
 
     // Handle image upload if present
-    let imageUrl = ""
+    let imageValue = ""
     if (image) {
       try {
         const formData = new FormData()
         formData.append("image", image)
         const result = await uploadAvatarImage(formData)
-        imageUrl = result.url
+        imageValue = result.url
       } catch (error) {
         toast.error("Failed to upload image")
         return
       }
+    } else {
+      // Generate initials from first and last name
+      const firstInitial = signUpFields.firstName.trim().charAt(0).toUpperCase()
+      const lastInitial = signUpFields.lastName.trim().charAt(0).toUpperCase()
+      imageValue = `${firstInitial}${lastInitial}`
     }
 
     await authClient.signUp.email(
       {
         ...signUpFields,
-        image: imageUrl,
+        image: imageValue,
         name: `${signUpFields.firstName} ${signUpFields.lastName}`,
       },
       {
