@@ -35,14 +35,14 @@ export function SettingsDisplayNameCard() {
   const isEdited =
     initialValueRef.current != null && value !== initialValueRef.current
   const isEmpty = value.trim().length === 0
-  const isTooLong = value.length > 32
+  const isTooLong = value.trim().length > 32
   const disableSave = isSaving || isPending || !isEdited || isEmpty || isTooLong
 
   async function handleSave() {
     if (disableSave) return
     setIsSaving(true)
     try {
-      const { error } = await authClient.updateUser({ name: value })
+      const { error } = await authClient.updateUser({ name: value.trim() })
       if (error) throw error
 
       initialValueRef.current = value
