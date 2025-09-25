@@ -26,6 +26,8 @@ export async function POST(request: Request) {
   }
 
   // Defer cleanup until after response is sent
+  // NOTE: In the future, we could leverage an event-driven async job system
+  // for work like this.
   after(async () => {
     // Delete old image from Vercel Blob if it exists and is from Vercel Blob
     if (

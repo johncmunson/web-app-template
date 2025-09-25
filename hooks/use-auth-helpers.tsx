@@ -9,7 +9,7 @@ import {
 } from "better-auth/react"
 import { authClient } from "@/lib/auth-client"
 import { useRouter, useSearchParams } from "next/navigation"
-import { uploadAvatarImage } from "@/app/actions/avatar-sign-up"
+import { uploadAvatarImage } from "@/app/actions/upload-avatar"
 
 export function useAuthHelpers() {
   const router = useRouter()

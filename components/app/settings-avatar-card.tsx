@@ -1,5 +1,6 @@
 "use client"
 
+import { uploadAvatarImage } from "@/app/actions/upload-avatar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -71,20 +72,15 @@ export function SettingsAvatarCard() {
     setIsUploading(true)
     try {
       const formData = new FormData()
-      formData.append("file", file)
-      const res = await fetch("/api/upload-avatar", {
-        method: "POST",
-        body: formData,
-      })
-      if (res.ok) {
-        refetch()
-        return true
-      } else {
-        throw new Error("Upload failed")
-      }
-    } catch (error) {
-      toast.error("Failed to upload avatar")
-      console.error("Avatar upload error", error)
+      formData.append("image", file)
+      await uploadAvatarImage(formData)
+      refetch()
+      return true
+    } catch (error: unknown) {
+      toast.error(
+        `Failed to upload avatar: ${error instanceof Error ? error.message : "Unknown error"}`,
+      )
+      console.error("Failed to upload avatar", error)
       return false
     } finally {
       setIsUploading(false)
