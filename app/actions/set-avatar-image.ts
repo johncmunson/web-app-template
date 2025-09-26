@@ -41,11 +41,6 @@ async function updateUserAvatar(
 /**
  * Uploads an avatar image during user sign-up or profile update.
  *
- * Note: This could have also been implemented as an API route so that we could
- * leverage `after` to to defer Vercel Blob deletion until after returning to
- * the client, but since we have to handle the unauthenticated case for sign-up,
- * then it's a little safer to use a server action.
- *
  * This function performs the following steps:
  * 1. Retrieves the current user session if it exists.
  * 2. Parses and validates the uploaded image file from the provided FormData.
