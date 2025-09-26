@@ -10,9 +10,6 @@ import {
 } from "@/lib/email-services"
 import { afterHook } from "@/lib/auth-request-hooks"
 
-const nodeEnv = getEnvVar("NODE_ENV")
-const isProd = nodeEnv === "production"
-
 const githubClientId = getEnvVar("GITHUB_CLIENT_ID")
 const githubClientSecret = getEnvVar("GITHUB_CLIENT_SECRET")
 const microsoftClientId = getEnvVar("MICROSOFT_CLIENT_ID")
@@ -25,7 +22,8 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     usePlural: true,
-    debugLogs: !isProd,
+    // Uncomment if you want to automatically log SQL queries in non-prod environments
+    // debugLogs: getEnvVar("NODE_ENV") !== "production",
   }),
   hooks: {
     after: afterHook,

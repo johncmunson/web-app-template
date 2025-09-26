@@ -1,6 +1,11 @@
 "use client"
 
-import { uploadAvatarImage } from "@/app/actions/upload-avatar"
+import { useEffect, useState, useRef } from "react"
+import {
+  setAvatarFromImageUpload,
+  setAvatarFromLinkedAccount,
+  setAvatarFromInitials,
+} from "@/app/actions/set-avatar-image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -37,15 +42,19 @@ import { toast } from "sonner"
  */
 export function SettingsAvatarCard() {
   const { data: session, refetch } = authClient.useSession()
-  const [open, setOpen] = React.useState(false)
-  const [menuMode, setMenuMode] = React.useState<
-    "root" | "linked" | "initials"
-  >("root")
-  const [initialsDraft, setInitialsDraft] = React.useState("")
-  const [isUploading, setIsUploading] = React.useState(false)
-  const [isSettingInitials, setIsSettingInitials] = React.useState(false)
-  const [isDragOver, setIsDragOver] = React.useState(false)
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [open, setOpen] = useState(false)
+  const [menuMode, setMenuMode] = useState<"root" | "linked" | "initials">(
+    "root",
+  )
+  const [initialsDraft, setInitialsDraft] = useState("")
+  const [isUploading, setIsUploading] = useState(false)
+  const [isSettingInitials, setIsSettingInitials] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
+  const [linkedProviders, setLinkedProviders] = useState<
+    Record<string, { accountId: string; image: string }>
+  >({})
+  const [updatingProvider, setUpdatingProvider] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const avatarSrc = session?.user.image || null
   const initials =
@@ -60,12 +69,54 @@ export function SettingsAvatarCard() {
             .slice(0, 2)
         : ""
 
+  // Helps ensure Avatar component remounts when switching between image/initials modes
+  const isImage = Boolean(avatarSrc && avatarSrc.length > 2)
+  const avatarKey = isImage ? `img:${avatarSrc}` : `initials:${initials || ""}`
+
   // Reset state when menu closes
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) {
       setMenuMode("root")
       setInitialsDraft("")
     }
+  }, [open])
+
+  // Fetch linked accounts when menu opens
+  useEffect(() => {
+    if (!open) return
+
+    async function fetchAccounts() {
+      try {
+        const res = await authClient.listAccounts()
+        if (res.data) {
+          const linked: Record<string, { accountId: string; image: string }> =
+            {}
+          for (const acc of res.data) {
+            if (["google", "github", "microsoft"].includes(acc.providerId)) {
+              try {
+                const info = await authClient.accountInfo({
+                  accountId: acc.accountId,
+                })
+                linked[acc.providerId] = {
+                  accountId: acc.accountId,
+                  image: info.data?.user?.image || "",
+                }
+              } catch (error) {
+                console.error(
+                  `Failed to fetch account info for ${acc.providerId}`,
+                  error,
+                )
+              }
+            }
+          }
+          setLinkedProviders(linked)
+        }
+      } catch (error) {
+        console.error("Failed to fetch accounts", error)
+      }
+    }
+
+    fetchAccounts()
   }, [open])
 
   async function uploadAvatar(file: File): Promise<boolean> {
@@ -73,7 +124,7 @@ export function SettingsAvatarCard() {
     try {
       const formData = new FormData()
       formData.append("image", file)
-      await uploadAvatarImage(formData)
+      await setAvatarFromImageUpload(formData)
       refetch()
       return true
     } catch (error: unknown) {
@@ -125,23 +176,32 @@ export function SettingsAvatarCard() {
     if (initialsDraft.length === 2) {
       setIsSettingInitials(true)
       try {
-        const res = await fetch("/api/set-initials", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ initials: initialsDraft }),
-        })
-        if (res.ok) {
-          refetch()
-          setOpen(false)
-        } else {
-          throw new Error("Failed to set initials")
-        }
+        await setAvatarFromInitials(initialsDraft)
+        refetch()
+        setOpen(false)
       } catch (error) {
         toast.error("Failed to set initials")
         console.error("Set initials error", error)
       } finally {
         setIsSettingInitials(false)
       }
+    }
+  }
+
+  async function handlePickLinkedProvider(provider: string) {
+    const providerData = linkedProviders[provider]
+    if (!providerData || !providerData.image) return
+
+    setUpdatingProvider(provider)
+    try {
+      await setAvatarFromLinkedAccount(providerData.image)
+      refetch()
+      setOpen(false)
+    } catch (error) {
+      toast.error(`Failed to set avatar from ${provider}`)
+      console.error(error)
+    } finally {
+      setUpdatingProvider(null)
     }
   }
 
@@ -170,9 +230,13 @@ export function SettingsAvatarCard() {
                   isDragOver && "outline-gray-500",
                 )}
               >
-                <Avatar className="size-18">
-                  {avatarSrc ? (
-                    <AvatarImage src={avatarSrc} alt="User avatar" />
+                <Avatar key={avatarKey} className="size-18">
+                  {isImage && avatarSrc ? (
+                    <AvatarImage
+                      src={avatarSrc}
+                      alt="User avatar"
+                      crossOrigin="anonymous"
+                    />
                   ) : null}
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
@@ -200,11 +264,9 @@ export function SettingsAvatarCard() {
               {menuMode === "linked" && (
                 <LinkedAccountsMenu
                   onBack={() => setMenuMode("root")}
-                  onPick={(provider) => {
-                    // Hook up to your real auth/link flow here
-                    console.log(`Choose linked provider: ${provider}`)
-                    setOpen(false)
-                  }}
+                  onPick={handlePickLinkedProvider}
+                  linkedProviders={linkedProviders}
+                  updatingProvider={updatingProvider}
                 />
               )}
 
@@ -279,10 +341,20 @@ function RootMenu({
 function LinkedAccountsMenu({
   onBack,
   onPick,
+  linkedProviders,
+  updatingProvider,
 }: {
   onBack: () => void
-  onPick: (provider: "Google" | "Github" | "Microsoft") => void
+  onPick: (provider: string) => void
+  linkedProviders: Record<string, { accountId: string; image: string }>
+  updatingProvider: string | null
 }) {
+  const providers = [
+    { label: "Google", id: "google" },
+    { label: "Github", id: "github" },
+    { label: "Microsoft", id: "microsoft" },
+  ]
+
   return (
     <div>
       <DropdownMenuLabel className="flex items-center gap-2">
@@ -297,24 +369,19 @@ function LinkedAccountsMenu({
         Choose provider
       </DropdownMenuLabel>
       <DropdownMenuSeparator />
-      <DropdownMenuItem
-        onSelect={(e) => e.preventDefault()}
-        onClick={() => onPick("Google")}
-      >
-        Google
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        onSelect={(e) => e.preventDefault()}
-        onClick={() => onPick("Github")}
-      >
-        Github
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        onSelect={(e) => e.preventDefault()}
-        onClick={() => onPick("Microsoft")}
-      >
-        Microsoft
-      </DropdownMenuItem>
+      {providers.map((p) => (
+        <DropdownMenuItem
+          key={p.id}
+          onSelect={(e) => e.preventDefault()}
+          onClick={() => onPick(p.id)}
+          disabled={!linkedProviders[p.id]?.image || updatingProvider === p.id}
+        >
+          {p.label}
+          {updatingProvider === p.id && (
+            <Loader2 className="ml-2 size-4 animate-spin" />
+          )}
+        </DropdownMenuItem>
+      ))}
     </div>
   )
 }

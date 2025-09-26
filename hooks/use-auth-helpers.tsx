@@ -9,7 +9,7 @@ import {
 } from "better-auth/react"
 import { authClient } from "@/lib/auth-client"
 import { useRouter, useSearchParams } from "next/navigation"
-import { uploadAvatarImage } from "@/app/actions/upload-avatar"
+import { setAvatarFromImageUpload } from "@/app/actions/set-avatar-image"
 
 export function useAuthHelpers() {
   const router = useRouter()
@@ -130,7 +130,7 @@ export function useAuthHelpers() {
       try {
         const formData = new FormData()
         formData.append("image", image)
-        const result = await uploadAvatarImage(formData)
+        const result = await setAvatarFromImageUpload(formData)
         imageValue = result.url
       } catch (error) {
         toast.error("Failed to upload image")

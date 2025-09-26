@@ -6,14 +6,37 @@ import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { compressImage } from "@/lib/compress-image"
 import { toArrayBuffer } from "@/lib/to-array-buffer"
+import { after } from "next/server"
 
 const vercelBlobToken = getEnvVar("VERCEL_BLOB_READ_WRITE_TOKEN")
+const vercelBlobDomain = getEnvVar("VERCEL_BLOB_DOMAIN")
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024 // 10 MB
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024 // 2 MB
 const AVATAR_DIMENSIONS = 512 // 512x512 pixels
 const FILE_NAME = "avatar"
 const FILE_EXTENSION = "webp"
+
+/**
+ * Helper function to update the user's avatar and clean up the old image.
+ */
+async function updateUserAvatar(
+  session: any,
+  oldImage: string | null | undefined,
+  newImageUrl: string,
+  requestHeaders: any,
+) {
+  await auth.api.updateUser({
+    body: { image: newImageUrl },
+    headers: requestHeaders,
+  })
+  if (oldImage) {
+    after(async () => {
+      await cleanupOldAvatarImage(oldImage)
+    })
+  }
+  return { url: newImageUrl }
+}
 
 /**
  * Uploads an avatar image during user sign-up or profile update.
@@ -37,12 +60,14 @@ const FILE_EXTENSION = "webp"
  * @throws Will throw an error if the image file is missing, too large, fails to upload,
  *         or fails to update the user profile.
  */
-export async function uploadAvatarImage(formData: FormData) {
+export async function setAvatarFromImageUpload(formData: FormData) {
   // Try to get session (optional for sign-up)
   const requestHeaders = await headers()
   const session = await auth.api.getSession({
     headers: requestHeaders,
   })
+
+  const oldImage = session?.user.image
 
   // Parse and validate payload
   const imageFile = formData.get("image") as File
@@ -88,31 +113,88 @@ export async function uploadAvatarImage(formData: FormData) {
     throw new Error("Failed to upload image to Vercel Blob")
   }
 
-  // If we have a session, update the user's profile with the new image
   if (session) {
+    return await updateUserAvatar(session, oldImage, blob.url, requestHeaders)
+  } else {
+    return { url: blob.url }
+  }
+}
+
+/**
+ * Cleans up an old avatar image from Vercel Blob storage.
+ *
+ * This function is used when a user changes their avatar via linked accounts
+ * or other methods, and we need to delete the previous image that was stored
+ * on Vercel Blob.
+ *
+ * @param oldImageUrl - The URL of the old image to delete.
+ * @throws Will throw an error if the deletion fails.
+ */
+export async function cleanupOldAvatarImage(oldImageUrl: string) {
+  // Only delete if it's a Vercel Blob image
+  if (oldImageUrl && oldImageUrl.includes(vercelBlobDomain)) {
     try {
-      await auth.api.updateUser({
-        body: { image: blob.url },
-        headers: requestHeaders,
-      })
+      await del(oldImageUrl, { token: vercelBlobToken })
     } catch (error) {
-      throw new Error("Failed to update user with new image")
+      console.error("Failed to delete old avatar image", error)
+      throw new Error("Failed to delete old avatar image")
     }
-    // If the user's previous image was also on Vercel Blob, then delete it
-    // NOTE: In the future, we could leverage an event-driven async job system
-    // for work like this.
-    if (
-      session.user.image &&
-      session.user.image.includes("vercel-storage.com")
-    ) {
-      try {
-        await del(session.user.image, { token: vercelBlobToken })
-      } catch (err) {
-        console.error("Failed to delete old image", err)
-      }
-    }
+  } else {
+    console.warn(
+      `Old image URL is not a Vercel Blob avatar image, skipping deletion: ${oldImageUrl}`,
+    )
+  }
+}
+
+/**
+ * Sets the user's avatar to an image from one of their linked accounts.
+ *
+ * @param imageUrl - The image URL from the linked account.
+ * @throws Will throw an error if unauthorized or update fails.
+ */
+export async function setAvatarFromLinkedAccount(imageUrl: string) {
+  const requestHeaders = await headers()
+  const session = await auth.api.getSession({
+    headers: requestHeaders,
+  })
+  if (!session) {
+    throw new Error("Unauthorized")
   }
 
-  // Return the new image URL
-  return { url: blob.url }
+  if (!imageUrl || typeof imageUrl !== "string") {
+    throw new Error("Invalid image URL")
+  }
+
+  const oldImage = session.user.image
+
+  return await updateUserAvatar(session, oldImage, imageUrl, requestHeaders)
+}
+
+/**
+ * Sets the user's avatar to their initials.
+ *
+ * @param initials - The two-character initials string.
+ * @throws Will throw an error if unauthorized, invalid initials, or update fails.
+ */
+export async function setAvatarFromInitials(initials: string) {
+  const requestHeaders = await headers()
+  const session = await auth.api.getSession({
+    headers: requestHeaders,
+  })
+  if (!session) {
+    throw new Error("Unauthorized")
+  }
+
+  if (!initials || typeof initials !== "string" || initials.length !== 2) {
+    throw new Error("Invalid initials")
+  }
+
+  const oldImage = session.user.image
+
+  return await updateUserAvatar(
+    session,
+    oldImage,
+    initials.toUpperCase(),
+    requestHeaders,
+  )
 }
