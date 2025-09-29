@@ -40,4 +40,4 @@ Additional notes:
 - We use PostgreSQL as the primary database. In local development, we use a local PostgreSQL instance, while in production we use Neon. Drizzle ORM is used for database interactions and migrations.
 - The marketing website will likely be deployed to the primary domain (e.g., example.com), while other apps like the main Next.js app and admin dashboard will be deployed to subdomains (e.g., app.example.com, admin.example.com).
 
-**Your current task** is to ${input:task}
+**Your current task** is to ${input:task:Describe the specific task you want help with regarding the monorepo migration}
