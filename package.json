@@ -64,8 +64,8 @@
   },
   "_comments": {
     "migration_workflow": {
-      "rapid_development": "Use `npm run db:push` to quickly push schema changes during development. This command applies changes directly to the database without creating migration files.",
-      "stable_development": "Use `npm run db:generate` to create a new migration file based on schema changes. After generating, use `npm run db:migrate` to apply the migration to the database."
+      "rapid_development": "Use `pnpm run db:push` to quickly push schema changes during development. This command applies changes directly to the database without creating migration files.",
+      "stable_development": "Use `pnpm run db:generate` to create a new migration file based on schema changes. After generating, use `npm run db:migrate` to apply the migration to the database."
     }
   }
 }
