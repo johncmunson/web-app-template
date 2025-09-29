@@ -1,36 +1,30 @@
-# Dependencies (handled via volumes, don’t send to Docker)
-**/node_modules
-**/.pnpm-store
+# Dependencies
+node_modules
 .pnpm-store
-
-# Build outputs
-**/.next
-**/dist
-**/out
-**/build
-
-# Turborepo cache
-**/.turbo
-
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# Editor & OS files
-.vscode
-.idea
-*.swp
-*.swo
-.DS_Store
-Thumbs.db
+.npm
 
 # Git
 .git
-.gitignore
 
-# Docker files (not needed inside container)
-Dockerfile
-.dockerignore
+# Editor configs
+.vscode
+.idea
+*.swp
+
+# System junk
+.DS_Store
+Thumbs.db
+
+# Build & cache artifacts
+dist
+build
+out
+coverage
+.next
+.turbo
+.cache
+
+# Logs
+*.log
+pnpm-debug.log*
+npm-debug.log*

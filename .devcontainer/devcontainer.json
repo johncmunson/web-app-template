@@ -1,12 +1,9 @@
 {
-  "name": "Node.js Development Container",
+  "name": "Monorepo Development Container",
   "dockerComposeFile": "./docker-compose.yml",
-  "service": "node",
+  "service": "monorepo",
   "workspaceFolder": "/workspace",
   // "remoteUser": "node" or "root",
-  "mounts": [
-    "source=${localWorkspaceFolder}/.devcontainer/starship.toml,target=/root/.config/starship.toml,type=bind,consistency=cached,readonly"
-  ],
   "customizations": {
     "vscode": {
       "extensions": [

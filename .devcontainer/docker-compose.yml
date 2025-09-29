@@ -1,11 +1,13 @@
 version: "3.9"
 
 services:
-  node:
+  monorepo:
     build: .
     init: true
     volumes:
       - ..:/workspace
+      - node_modules:/workspace/node_modules
+      - pnpm-store:/pnpm-store
     command: sleep infinity
     ports:
       - "3000:3000"
@@ -13,6 +15,19 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      # Configure pnpm to install its global/dlx binaries into /pnpm-store
+      # instead of the default ~/.local/share/pnpm. We mount /pnpm-store
+      # as a named volume (see below) so that:
+      #   1. Installed pnpm tools (e.g. via "pnpm dlx" or "pnpm add -g")
+      #      are persisted across container rebuilds.
+      #   2. The host system (WSL) stays clean, since no files are written
+      #      to your home directory.
+      # Adding /pnpm-store to PATH makes those binaries directly runnable
+      # without needing the full path.
+      PNPM_HOME: /pnpm-store
+      PATH: /pnpm-store:$PATH
+      # Tell starship where to find its config file
+      STARSHIP_CONFIG: /workspace/.devcontainer/starship.toml
       # Make CLI tools like psql easier
       PGHOST: postgres
       PGUSER: postgres
@@ -39,4 +54,6 @@ services:
       start_period: 10s
 
 volumes:
+  node_modules:
+  pnpm-store:
   postgres_data:
