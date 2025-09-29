@@ -23,4 +23,8 @@ ENV LC_ALL=en_US.UTF-8
 RUN curl -sS https://starship.rs/install.sh | sh -s -- --yes \
     && echo 'eval "$(starship init bash)"' >> /etc/bash.bashrc
 
+# Install and enable pnpm 10.17.1 via Corepack
+RUN corepack enable \
+    && corepack prepare pnpm@10.17.1 --activate
+
 WORKDIR /workspace
