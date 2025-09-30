@@ -46,6 +46,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@web-app-template/ts-config": "workspace:*",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

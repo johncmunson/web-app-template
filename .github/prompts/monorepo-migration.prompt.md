@@ -34,10 +34,13 @@ As you can see, the monorepo structure will initially consist of just a single a
 Additional notes:
 
 - Packages in this monorepo will never be published to a package registry; they are strictly for internal use within the monorepo.
+- When the concept of compiled vs. just-in-time is applicable to a new package, you should strongly prefer just-in-time packages to avoid unnecessary complexity and build steps.
 - We intend for Github to be the primary VCS platform, with Github Actions as the CI/CD solution.
 - We intend for Vercel to be the primary hosting platform for the Next.js applications and frontend apps.
 - We also intend to use the Vercel platform for any backend services or serverless functions that may be needed.
 - We use PostgreSQL as the primary database. In local development, we use a local PostgreSQL instance, while in production we use Neon. Drizzle ORM is used for database interactions and migrations.
 - The marketing website will likely be deployed to the primary domain (e.g., example.com), while other apps like the main Next.js app and admin dashboard will be deployed to subdomains (e.g., app.example.com, admin.example.com).
 
-**Your current task** is to ${input:task:Describe the specific task you want help with regarding the monorepo migration}
+**Your current objective** is to ${input:objective}.
+
+_Important_: When working through your current objective, you may be tempted to run things from the command line, such as ESLint or tsc commands, in order to check your work and verify that the app still works and compiles. However, please avoid doing this for the time being. Large migrations are often messy and we must accept for the time being that the app will not be in a fully working state until we have addressed migrating other tools and configurations. We will handle running commands and verifying the work once we are closer to the end of the migration. Right now, you are to remain laser focused on your specified objective. You will have to lean heavily on your existing expertise, the provided context and reference materials, and your ability to reason from first principles in order to successfully complete your objective. Believe in yourself, you can do this!
