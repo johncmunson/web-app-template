@@ -44,3 +44,7 @@ Additional notes:
 **Your current objective** is to ${input:objective}.
 
 _Important_: When working through your current objective, you may be tempted to run things from the command line, such as ESLint or tsc commands, in order to check your work and verify that the app still works and compiles. However, please avoid doing this for the time being. Large migrations are often messy and we must accept for the time being that the app will not be in a fully working state until we have addressed migrating other tools and configurations. We will handle running commands and verifying the work once we are closer to the end of the migration. Right now, you are to remain laser focused on your specified objective. You will have to lean heavily on your existing expertise, the provided context and reference materials, and your ability to reason from first principles in order to successfully complete your objective. Believe in yourself, you can do this!
+
+List of completed objectives so far:
+
+- Create a shared TypeScript configuration package
