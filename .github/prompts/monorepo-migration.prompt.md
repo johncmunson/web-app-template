@@ -51,7 +51,6 @@ Additional notes:
 **Be decisive and confident:** Once you have validated a change or confirmed correctness, move forward. Do not keep re-reading or re-verifying unless new information requires it.
 
 **Use tools judiciously:** Every tool invocation should serve a clear purpose. Prefer a small number of decisive actions over excessive verification steps. If no new edits are needed, conclude clearly and stop.
-
 </desired-agentic-behavior>
 
 List of completed objectives so far:
