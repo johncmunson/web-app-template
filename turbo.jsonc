@@ -1,6 +1,18 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "tasks": {
+    "lint": {
+      "inputs": [
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.cjs",
+        "**/*.mjs",
+        "**/*.json",
+      ],
+      "outputs": [],
+    },
     "topo": {
       "dependsOn": ["^topo"],
     },
