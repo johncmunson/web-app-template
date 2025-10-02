@@ -20,6 +20,7 @@
     "@web-app-template/ts-config": "workspace:*",
     "eslint": "^9.36.0",
     "postcss": "^8.5.6",
+    "postcss-load-config": "^6.0.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "tailwindcss": "^4.1.13",
@@ -32,7 +33,10 @@
   },
   "exports": {
     "./globals.css": "./src/styles/globals.css",
-    "./postcss.config": "./postcss.config.mjs",
+    "./postcss.config": {
+      "import": "./postcss.config.mjs",
+      "types": "./postcss.config.d.ts"
+    },
     "./lib/*": "./src/lib/*.ts",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts"
