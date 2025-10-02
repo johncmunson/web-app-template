@@ -1,5 +1,5 @@
 import "@/lib/envConfig"
-import { Resend } from "resend"
+import { CreateEmailOptions, Resend } from "resend"
 import { getEnvVar } from "@/lib/utils"
 
 const nodeEnv = getEnvVar("NODE_ENV")
@@ -7,6 +7,8 @@ const resendApiKey = getEnvVar("RESEND_API_KEY")
 const defaultFrom = getEnvVar("RESEND_DEFAULT_FROM")
 
 const isProd = nodeEnv === "production"
+
+type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
 // Initialize Resend
 export const resend = new Resend(resendApiKey)
@@ -71,7 +73,8 @@ export async function sendEmail({
     }
 
     // Add content based on what's provided
-    let emailData: any = baseEmailData
+    let emailData: MakeOptional<CreateEmailOptions, "react" | "html" | "text"> =
+      baseEmailData
 
     if (react) {
       emailData = { ...baseEmailData, react }
@@ -87,7 +90,9 @@ export async function sendEmail({
       }
     }
 
-    const { data, error } = await resend.emails.send(emailData)
+    const { data, error } = await resend.emails.send(
+      emailData as CreateEmailOptions,
+    )
 
     if (error) {
       console.error("Failed to send email:", error)

@@ -45,8 +45,8 @@ export function PasswordReset({ firstName, resetUrl }: PasswordResetProps) {
 
         <p style={{ color: "#1f2937", fontSize: "16px", lineHeight: "1.6" }}>
           Someone requested a password reset for your account. If this was you,
-          click the button below to create a new password. If you didn't request
-          this, you can safely ignore this email.
+          click the button below to create a new password. If you didn&apos;t
+          request this, you can safely ignore this email.
         </p>
 
         <div style={{ textAlign: "center" as const, margin: "32px 0" }}>
@@ -68,8 +68,8 @@ export function PasswordReset({ firstName, resetUrl }: PasswordResetProps) {
         </div>
 
         <p style={{ color: "#6b7280", fontSize: "14px", lineHeight: "1.5" }}>
-          If the button doesn't work, you can copy and paste the following link
-          into your browser:
+          If the button doesn&apos;t work, you can copy and paste the following
+          link into your browser:
         </p>
 
         <p
@@ -119,8 +119,8 @@ export function PasswordReset({ firstName, resetUrl }: PasswordResetProps) {
             margin: "0",
           }}
         >
-          If you didn't request this password reset, please ignore this email or
-          contact our support team if you have concerns.
+          If you didn&apos;t request this password reset, please ignore this
+          email or contact our support team if you have concerns.
         </p>
       </div>
     </div>

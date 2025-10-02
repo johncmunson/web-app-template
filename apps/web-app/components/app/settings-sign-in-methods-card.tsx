@@ -28,7 +28,8 @@ import {
   Mail,
 } from "lucide-react"
 import { toast } from "sonner"
-import { cn, capitalize } from "@/lib/utils"
+import { capitalize } from "@/lib/utils"
+import { cn } from "@web-app-template/ui/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -65,6 +66,41 @@ export function formatLastUsed(
   }).format(date)
 }
 
+const defaultProviders: Provider[] = [
+  {
+    id: "credential",
+    name: "Email/Password",
+    detailWhenDisconnected: "Enable email + password login",
+    isConnected: false,
+    lastUsed: null,
+    icon: <Mail />,
+  },
+  {
+    id: "google",
+    name: "Google",
+    detailWhenDisconnected: "Connect your Google account",
+    isConnected: false,
+    lastUsed: null,
+    icon: <GoogleIcon />,
+  },
+  {
+    id: "github",
+    name: "GitHub",
+    detailWhenDisconnected: "Connect your GitHub account",
+    isConnected: false,
+    lastUsed: null,
+    icon: <GithubIcon />,
+  },
+  {
+    id: "microsoft",
+    name: "Microsoft",
+    detailWhenDisconnected: "Connect your Microsoft account",
+    isConnected: false,
+    lastUsed: null,
+    icon: <MicrosoftIcon />,
+  },
+]
+
 export function SettingsSignInMethodsCard() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false)
@@ -73,41 +109,6 @@ export function SettingsSignInMethodsCard() {
   const [newPassword, setNewPassword] = React.useState("")
   const [confirmPassword, setConfirmPassword] = React.useState("")
   const [isSettingPassword, setIsSettingPassword] = React.useState(false)
-  const defaultProviders: Provider[] = [
-    {
-      id: "credential",
-      name: "Email/Password",
-      detailWhenDisconnected: "Enable email + password login",
-      isConnected: false,
-      lastUsed: null,
-      icon: <Mail />,
-    },
-    {
-      id: "google",
-      name: "Google",
-      detailWhenDisconnected: "Connect your Google account",
-      isConnected: false,
-      lastUsed: null,
-      icon: <GoogleIcon />,
-    },
-    {
-      id: "github",
-      name: "GitHub",
-      detailWhenDisconnected: "Connect your GitHub account",
-      isConnected: false,
-      lastUsed: null,
-      icon: <GithubIcon />,
-    },
-    {
-      id: "microsoft",
-      name: "Microsoft",
-      detailWhenDisconnected: "Connect your Microsoft account",
-      isConnected: false,
-      lastUsed: null,
-      icon: <MicrosoftIcon />,
-    },
-  ]
-
   const [providers, setProviders] = React.useState<Provider[]>(defaultProviders)
 
   const loadLinkedProviders = React.useCallback(async () => {
@@ -194,8 +195,8 @@ export function SettingsSignInMethodsCard() {
         if (error) throw new Error(error.message)
         toast.success(`${capitalize(id)} disconnected`)
         await loadLinkedProviders()
-      } catch (err: any) {
-        toast.error(err?.message || `Failed to disconnect ${id}`)
+      } catch (err: unknown) {
+        toast.error((err as Error)?.message || `Failed to disconnect ${id}`)
       } finally {
         setProvider(id, (p) => ({ ...p, connecting: false }))
       }
@@ -210,8 +211,10 @@ export function SettingsSignInMethodsCard() {
       if (error) throw new Error(error.message)
       toast.success("Email/Password disconnected")
       await loadLinkedProviders()
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to disconnect Email/Password")
+    } catch (err: unknown) {
+      toast.error(
+        (err as Error)?.message || "Failed to disconnect Email/Password",
+      )
     } finally {
       setProvider("credential", (p) => ({ ...p, connecting: false }))
     }
@@ -257,8 +260,8 @@ export function SettingsSignInMethodsCard() {
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to set password")
+    } catch (err: unknown) {
+      toast.error((err as Error)?.message || "Failed to set password")
     } finally {
       setIsSettingPassword(false)
     }
@@ -297,8 +300,8 @@ export function SettingsSignInMethodsCard() {
       setNewPassword("")
       setConfirmPassword("")
       await loadLinkedProviders()
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to change password")
+    } catch (err: unknown) {
+      toast.error((err as Error)?.message || "Failed to change password")
     } finally {
       setIsSettingPassword(false)
     }

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@web-app-template/ui/lib/utils"
 
 // Adapted from https://simpleicons.org/
 

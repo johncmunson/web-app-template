@@ -27,7 +27,7 @@ export function WelcomeEmail({ firstName, email }: WelcomeEmailProps) {
           Welcome to Web App Template!
         </h1>
         <p style={{ color: "#6b7280", margin: "0", fontSize: "16px" }}>
-          We're excited to have you on board.
+          We&apos;re excited to have you on board.
         </p>
       </div>
 
@@ -50,13 +50,13 @@ export function WelcomeEmail({ firstName, email }: WelcomeEmailProps) {
 
         <p style={{ color: "#1f2937", fontSize: "16px", lineHeight: "1.6" }}>
           You can now start exploring all the features we have to offer. If you
-          have any questions or need assistance, don't hesitate to reach out to
-          our support team.
+          have any questions or need assistance, don&apos;t hesitate to reach
+          out to our support team.
         </p>
 
         <div style={{ textAlign: "center" as const, margin: "32px 0" }}>
           <a
-            href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}
+            href={process.env["NEXT_PUBLIC_APP_URL"] || "http://localhost:3000"}
             style={{
               backgroundColor: "#3b82f6",
               color: "white",
@@ -101,8 +101,8 @@ export function WelcomeEmail({ firstName, email }: WelcomeEmailProps) {
             margin: "0",
           }}
         >
-          If you didn't create this account, please ignore this email or contact
-          our support team.
+          If you didn&apos;t create this account, please ignore this email or
+          contact our support team.
         </p>
       </div>
     </div>

@@ -8,6 +8,10 @@ import { compressImage } from "@/lib/compress-image"
 import { toArrayBuffer } from "@/lib/to-array-buffer"
 import { after } from "next/server"
 
+type ResolvedType<T extends (...args: unknown[]) => unknown> = Awaited<
+  ReturnType<T>
+>
+
 const vercelBlobToken = getEnvVar("VERCEL_BLOB_READ_WRITE_TOKEN")
 const vercelBlobDomain = getEnvVar("VERCEL_BLOB_DOMAIN")
 
@@ -21,10 +25,9 @@ const FILE_EXTENSION = "webp"
  * Helper function to update the user's avatar and clean up the old image.
  */
 async function updateUserAvatar(
-  session: any,
   oldImage: string | null | undefined,
   newImageUrl: string,
-  requestHeaders: any,
+  requestHeaders: ResolvedType<typeof headers>,
 ) {
   await auth.api.updateUser({
     body: { image: newImageUrl },
@@ -104,12 +107,12 @@ export async function setAvatarFromImageUpload(formData: FormData) {
       addRandomSuffix: true,
       token: vercelBlobToken,
     })
-  } catch (error) {
+  } catch (_err) {
     throw new Error("Failed to upload image to Vercel Blob")
   }
 
   if (session) {
-    return await updateUserAvatar(session, oldImage, blob.url, requestHeaders)
+    return await updateUserAvatar(oldImage, blob.url, requestHeaders)
   } else {
     return { url: blob.url }
   }
@@ -162,7 +165,7 @@ export async function setAvatarFromLinkedAccount(imageUrl: string) {
 
   const oldImage = session.user.image
 
-  return await updateUserAvatar(session, oldImage, imageUrl, requestHeaders)
+  return await updateUserAvatar(oldImage, imageUrl, requestHeaders)
 }
 
 /**
@@ -187,7 +190,6 @@ export async function setAvatarFromInitials(initials: string) {
   const oldImage = session.user.image
 
   return await updateUserAvatar(
-    session,
     oldImage,
     initials.toUpperCase(),
     requestHeaders,

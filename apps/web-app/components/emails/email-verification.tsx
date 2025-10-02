@@ -71,8 +71,8 @@ export function EmailVerification({
         </div>
 
         <p style={{ color: "#6b7280", fontSize: "14px", lineHeight: "1.5" }}>
-          If the button doesn't work, you can copy and paste the following link
-          into your browser:
+          If the button doesn&apos;t work, you can copy and paste the following
+          link into your browser:
         </p>
 
         <p
@@ -122,8 +122,8 @@ export function EmailVerification({
             margin: "0",
           }}
         >
-          If you didn't create this account, please ignore this email or contact
-          our support team.
+          If you didn&apos;t create this account, please ignore this email or
+          contact our support team.
         </p>
       </div>
     </div>

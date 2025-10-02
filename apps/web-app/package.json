@@ -28,6 +28,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@react-email/render": "^1.2.3",
     "@vercel/blob": "^2.0.0",
+    "@web-app-template/ui": "workspace:*",
     "better-auth": "^1.3.8",
     "client-only": "^0.0.1",
     "drizzle-orm": "^0.44.5",
@@ -44,12 +45,13 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@web-app-template/ts-config": "workspace:*",
-    "@web-app-template/eslint-config": "workspace:*",
     "@types/node": "^20",
+    "@types/pg": "^8.15.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/ws": "^8.18.1",
+    "@web-app-template/eslint-config": "workspace:*",
+    "@web-app-template/ts-config": "workspace:*",
     "drizzle-kit": "^0.31.4",
     "eslint": "^9",
     "typescript": "^5"

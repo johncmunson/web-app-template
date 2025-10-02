@@ -132,7 +132,7 @@ export function useAuthHelpers() {
         formData.append("image", image)
         const result = await setAvatarFromImageUpload(formData)
         imageValue = result.url
-      } catch (error) {
+      } catch (_err) {
         toast.error("Failed to upload image")
         return
       }

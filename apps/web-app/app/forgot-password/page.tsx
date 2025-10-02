@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
     }
     try {
       setPending(true)
-      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ""
+      const basePath = process.env["NEXT_PUBLIC_BASE_PATH"] || ""
       const url = new URL(`${basePath}/reset-password`, window.location.origin)
       await authClient.requestPasswordReset({
         email: email.trim(),
@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
         <CardHeader>
           <CardTitle className="text-lg md:text-xl">Forgot password</CardTitle>
           <CardDescription className="text-xs md:text-sm">
-            Enter your email and we'll send you a reset link.
+            Enter your email and we&apos;ll send you a reset link.
           </CardDescription>
         </CardHeader>
         <CardContent>

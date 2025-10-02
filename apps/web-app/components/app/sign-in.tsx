@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
+import { cn } from "@web-app-template/ui/lib/utils"
 import { AuthCard } from "@/components/app/auth-card"
 import { useAuthHelpers } from "@/hooks/use-auth-helpers"
 

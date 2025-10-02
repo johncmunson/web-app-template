@@ -12,12 +12,17 @@ import {
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
 import { Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn } from "@web-app-template/ui/lib/utils"
 import { toast } from "sonner"
 import { authClient } from "@/lib/auth-client"
 
 export function SettingsDisplayNameCard() {
-  const { data: session, isPending, error, refetch } = authClient.useSession()
+  const {
+    data: session,
+    isPending,
+    error: _err,
+    refetch,
+  } = authClient.useSession()
 
   // Track the initial value independently so we can compute "edited" state
   const initialValueRef = useRef<string | null>(null)
@@ -48,7 +53,7 @@ export function SettingsDisplayNameCard() {
       initialValueRef.current = value
       refetch()
       toast.success("Display name has been updated")
-    } catch (error) {
+    } catch (_err) {
       toast.error("Failed to update display name")
     } finally {
       setIsSaving(false)

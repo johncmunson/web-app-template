@@ -71,12 +71,14 @@ const defaultMaxConnections = isProd ? 10 : isTest ? 1 : 5
 
 const defaultIdleTimeoutMs = 10_000
 
-const maxConnections = Number.isFinite(Number(process.env.DB_MAX_CONNECTIONS))
-  ? Number(process.env.DB_MAX_CONNECTIONS)
+const maxConnections = Number.isFinite(
+  Number(process.env["DB_MAX_CONNECTIONS"]),
+)
+  ? Number(process.env["DB_MAX_CONNECTIONS"])
   : defaultMaxConnections
 
-const idleTimeoutMs = Number.isFinite(Number(process.env.DB_IDLE_TIMEOUT_MS))
-  ? Number(process.env.DB_IDLE_TIMEOUT_MS)
+const idleTimeoutMs = Number.isFinite(Number(process.env["DB_IDLE_TIMEOUT_MS"]))
+  ? Number(process.env["DB_IDLE_TIMEOUT_MS"])
   : defaultIdleTimeoutMs
 
 function createProdPool(): NeonPool {

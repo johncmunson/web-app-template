@@ -20,7 +20,8 @@ import {
   FileQuestionMark,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { capitalize, cn } from "@/lib/utils"
+import { capitalize } from "@/lib/utils"
+import { cn } from "@web-app-template/ui/lib/utils"
 
 interface DeviceSession {
   id: string
@@ -74,7 +75,7 @@ export function SettingsSessionManagementCard() {
     if (replaceList) setIsLoading(true)
     else setIsRefreshing(true)
     try {
-      const result: any = await authClient.listSessions()
+      const result = await authClient.listSessions()
       const list: DeviceSession[] = Array.isArray(result)
         ? result
         : (result?.data ?? [])

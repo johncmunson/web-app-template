@@ -3,6 +3,9 @@
  * https://github.com/pillarjs/path-to-regexp/tree/v8.3.0
  */
 
+/* eslint-disable */
+// @ts-nocheck
+
 const DEFAULT_DELIMITER = "/"
 const NOOP_VALUE = (value: string) => value
 const ID_START = /^[$_\p{ID_Start}]$/u

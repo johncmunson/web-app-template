@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth-client"
-import { cn } from "@/lib/utils"
+import { cn } from "@web-app-template/ui/lib/utils"
 import { CircleCheck, CircleX, Loader2 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
@@ -156,7 +156,7 @@ export function SettingsAvatarCard() {
     const files = e.dataTransfer.files
     if (files.length > 0) {
       const file = files[0]
-      if (file.type.startsWith("image/")) {
+      if (file && file.type.startsWith("image/")) {
         await uploadAvatar(file)
       }
     }

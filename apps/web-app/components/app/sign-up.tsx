@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { AuthCard } from "@/components/app/auth-card"
 import { Avatar, AvatarImage } from "@/components/ui/avatar"
 import { useAuthHelpers } from "@/hooks/use-auth-helpers"
-import { cn } from "@/lib/utils"
+import { cn } from "@web-app-template/ui/lib/utils"
 import { useRef, useState } from "react"
 import { X } from "lucide-react"
 
@@ -45,7 +45,7 @@ export default function SignUp() {
     const files = e.dataTransfer.files
     if (files.length > 0) {
       const file = files[0]
-      if (file.type.startsWith("image/")) {
+      if (file && file.type.startsWith("image/")) {
         setImage(file)
         const reader = new FileReader()
         reader.onloadend = () => {
