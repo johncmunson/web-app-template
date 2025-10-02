@@ -11,7 +11,7 @@ import { config as baseConfig } from "./base.js"
 /**
  * A custom ESLint configuration for libraries that use Next.js.
  *
- * @type {import("eslint").Linter.Config}
+ * @type {import("eslint").Linter.Config[]}
  * */
 export const config = [
   ...baseConfig,
@@ -19,9 +19,9 @@ export const config = [
   eslintConfigPrettier,
   ...tseslint.configs.recommended,
   {
-    ...pluginReact.configs.flat.recommended,
+    ...pluginReact.configs.flat["recommended"],
     languageOptions: {
-      ...pluginReact.configs.flat.recommended.languageOptions,
+      ...(pluginReact.configs.flat["recommended"]?.languageOptions ?? {}),
       globals: {
         ...globals.serviceworker,
       },
@@ -51,4 +51,7 @@ export const config = [
   {
     ignores: [".next/**", "out/**", "build/**", "next-env.d.ts"],
   },
-]
+].filter(
+  /** @returns {config is import("eslint").Linter.Config} */
+  (config) => config !== undefined,
+)
