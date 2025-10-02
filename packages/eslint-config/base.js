@@ -7,7 +7,7 @@ import tseslint from "typescript-eslint"
 /**
  * Universal linting defaults for any package in the monorepo.
  *
- * @type {import("eslint").Linter.FlatConfig[]}
+ * @type {import("eslint").Linter.Config[]}
  */
 export const config = [
   js.configs.recommended,
@@ -36,5 +36,3 @@ export const config = [
     ],
   },
 ]
-
-export default config

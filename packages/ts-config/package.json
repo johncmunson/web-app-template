@@ -1,3 +1,4 @@
 {
-  "name": "@web-app-template/ts-config"
+  "name": "@web-app-template/ts-config",
+  "private": true
 }

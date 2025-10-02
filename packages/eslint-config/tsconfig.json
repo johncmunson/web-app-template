@@ -1,0 +1,8 @@
+{
+  "extends": "@web-app-template/ts-config/eslint.json",
+  "compilerOptions": {
+    "outDir": "./types"
+  },
+  "include": ["./*.js"],
+  "exclude": ["node_modules", "types"]
+}
