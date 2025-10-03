@@ -13,7 +13,7 @@ import { Input } from "@web-app-template/ui/components/ui/input"
 import { Button } from "@web-app-template/ui/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { cn } from "@web-app-template/ui/lib/utils"
-import { toast } from "sonner"
+import { toast } from "@web-app-template/ui/lib/toast"
 import { authClient } from "@/lib/auth-client"
 
 export function SettingsDisplayNameCard() {

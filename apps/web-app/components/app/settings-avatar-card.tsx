@@ -33,7 +33,7 @@ import { authClient } from "@/lib/auth-client"
 import { cn } from "@web-app-template/ui/lib/utils"
 import { CircleCheck, CircleX, Loader2 } from "lucide-react"
 import * as React from "react"
-import { toast } from "sonner"
+import { toast } from "@web-app-template/ui/lib/toast"
 
 /**
  * SettingsAvatarCard

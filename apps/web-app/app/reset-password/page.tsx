@@ -3,7 +3,7 @@
 import { useState, FormEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
-import { toast } from "sonner"
+import { toast } from "@web-app-template/ui/lib/toast"
 import {
   Card,
   CardContent,

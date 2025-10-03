@@ -27,7 +27,7 @@ import {
   ExternalLink,
   Mail,
 } from "lucide-react"
-import { toast } from "sonner"
+import { toast } from "@web-app-template/ui/lib/toast"
 import { capitalize } from "@/lib/utils"
 import { cn } from "@web-app-template/ui/lib/utils"
 import {

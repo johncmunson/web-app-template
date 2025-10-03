@@ -9,6 +9,9 @@
 - Consider a prettier plugin or something that will auto-sort tailwind classes
 - Investigate whether or not `transpilePackages: ["@web-app-template/ui"]` is really necessary in `next.config.ts`
 - Figure out why my code only shows up inside the dev container, but not on WSL
+- Turborepo config -> `turbo.jsonc`
+- Optimize better-auth for performance -> https://www.better-auth.com/docs/guides/optimizing-for-performance
+- Optimize better-auth for security -> https://www.better-auth.com/docs/reference/security
 
 ## Misc
 

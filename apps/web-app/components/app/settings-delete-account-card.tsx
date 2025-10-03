@@ -22,7 +22,7 @@ import {
 import { Button } from "@web-app-template/ui/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
+import { toast } from "@web-app-template/ui/lib/toast"
 import { authClient } from "@/lib/auth-client"
 
 async function mockDeleteAccount(): Promise<void> {

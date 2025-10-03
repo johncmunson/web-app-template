@@ -11,7 +11,7 @@ import {
 } from "@web-app-template/ui/components/ui/card"
 import { Button } from "@web-app-template/ui/components/ui/button"
 import { authClient } from "@/lib/auth-client"
-import { toast } from "sonner"
+import { toast } from "@web-app-template/ui/lib/toast"
 import {
   Loader2,
   MonitorCheck,
