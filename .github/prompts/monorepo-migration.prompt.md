@@ -57,3 +57,4 @@ List of completed objectives so far:
 
 - Create a shared TypeScript configuration package
 - Create a shared ESLint configuration package
+- Create a shared `ui` library using shadcn and tailwind
