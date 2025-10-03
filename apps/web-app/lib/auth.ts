@@ -22,6 +22,7 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     usePlural: true,
+    transaction: true,
     // Uncomment if you want to automatically log SQL queries in non-prod environments
     // debugLogs: getEnvVar("NODE_ENV") !== "production",
   }),
