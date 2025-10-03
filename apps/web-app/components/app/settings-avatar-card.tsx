@@ -6,8 +6,12 @@ import {
   setAvatarFromLinkedAccount,
   setAvatarFromInitials,
 } from "@/app/actions/set-avatar-image"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@web-app-template/ui/components/ui/avatar"
+import { Button } from "@web-app-template/ui/components/ui/button"
 import {
   Card,
   CardAction,
@@ -15,7 +19,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@web-app-template/ui/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,8 +27,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from "@web-app-template/ui/components/ui/dropdown-menu"
+import { Input } from "@web-app-template/ui/components/ui/input"
 import { authClient } from "@/lib/auth-client"
 import { cn } from "@web-app-template/ui/lib/utils"
 import { CircleCheck, CircleX, Loader2 } from "lucide-react"

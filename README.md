@@ -6,6 +6,8 @@
   - Many of the imports need changed to reference the `ui` workspace.
   - Many of the `shadcn` components need migrated to the `ui` workspace.
 - Consider adding storybook capability to the `ui` workspace
+- Why is the eslint rule `turbo/no-undeclared-env-vars` only working in the db client file?
+- Make sure to review the Turborepo best-practices outlined in [Add to an existing repository](https://turborepo.com/docs/getting-started/add-to-existing-repository#add-a-turbojson-file)
 
 ## Misc
 

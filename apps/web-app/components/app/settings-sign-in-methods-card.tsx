@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@web-app-template/ui/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@web-app-template/ui/components/ui/dropdown-menu"
 import {
   Card,
   CardContent,
@@ -15,7 +15,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@web-app-template/ui/components/ui/card"
 import { GithubIcon } from "@/components/icons/github-icon"
 import { GoogleIcon } from "@/components/icons/google-icon"
 import { MicrosoftIcon } from "@/components/icons/microsoft-icon"
@@ -37,9 +37,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@web-app-template/ui/components/ui/dialog"
+import { Input } from "@web-app-template/ui/components/ui/input"
+import { Label } from "@web-app-template/ui/components/ui/label"
 import { authClient } from "@/lib/auth-client"
 import { setPasswordAction } from "@/app/actions/auth"
 

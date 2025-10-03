@@ -1,7 +1,7 @@
 "use client"
 
 import { FormEvent, useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@web-app-template/ui/lib/toast"
 import {
   ErrorContext,
   RequestContext,

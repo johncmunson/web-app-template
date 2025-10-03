@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@web-app-template/ui/components/ui/button"
 import { cn } from "@web-app-template/ui/lib/utils"
 import { GithubIcon } from "@/components/icons/github-icon"
 import { GoogleIcon } from "@/components/icons/google-icon"

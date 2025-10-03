@@ -8,9 +8,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "../ui/input"
-import { Button } from "../ui/button"
+} from "@web-app-template/ui/components/ui/card"
+import { Input } from "@web-app-template/ui/components/ui/input"
+import { Button } from "@web-app-template/ui/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { cn } from "@web-app-template/ui/lib/utils"
 import { toast } from "sonner"

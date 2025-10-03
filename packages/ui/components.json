@@ -15,6 +15,6 @@
     "hooks": "@web-app-template/ui/hooks",
     "lib": "@web-app-template/ui/lib",
     "utils": "@web-app-template/ui/lib/utils",
-    "ui": "@web-app-template/ui/components"
+    "ui": "@web-app-template/ui/components/ui"
   }
 }

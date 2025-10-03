@@ -11,10 +11,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+} from "@web-app-template/ui/components/ui/card"
+import { Input } from "@web-app-template/ui/components/ui/input"
+import { Label } from "@web-app-template/ui/components/ui/label"
+import { Button } from "@web-app-template/ui/components/ui/button"
 import Link from "next/link"
 
 export default function ResetPasswordPage() {

@@ -5,7 +5,7 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from "@/components/ui/card"
+} from "@web-app-template/ui/components/ui/card"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
 import { FormEvent } from "react"
