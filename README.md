@@ -2,6 +2,8 @@
 
 ## Todos
 
+- @web-app-template -> @repo
+- Next.js errthang
 - Consider adding storybook capability to the `ui` workspace
 - Why is the eslint rule `turbo/no-undeclared-env-vars` only working in the db client file?
 - Fix the `turbo/no-undeclared-env-vars` lint warnings
@@ -16,3 +18,21 @@
 ## Misc
 
 - Write a _Monorepo Guidelines and Best Practices_ doc so there's a clear mental model of how to add new packages and manage their dependencies
+
+## Stack
+
+- next.js
+- tsconfig
+- eslint
+- prettier / biome
+- vitest
+- react testing library
+- mock service worker
+- t3-env
+- zod
+- neon
+- drizzle
+- tailwind
+- shadcn
+- better-auth
+- vercel blob
